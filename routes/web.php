@@ -1,8 +1,38 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Laravel\Socialite\Facades\Socialite;
 use Livewire\Volt\Volt;
+
+// Twitch OAuth routes
+Route::get('/auth/twitch', function () {
+    return Socialite::driver('twitch')->redirect();
+});
+
+Route::get('/auth/twitch/callback', function () {
+    try {
+        $twitchUser = Socialite::driver('twitch')->user();
+        // No user by Twitch or email? Create a new one!
+        $user = \App\Models\User::create([
+            'name' => $twitchUser->name,
+            'email' => $twitchUser->email,
+            'twitch_id' => $twitchUser->id,
+            'twitch_username' => $twitchUser->nickname,
+            'twitch_display_name' => $twitchUser->name,
+            'twitch_avatar' => $twitchUser->avatar,
+        ]);
+
+        Auth::login($user);
+
+        return redirect('/dashboard');
+
+    } catch (\Exception $e) {
+        throw $e; // User requested to keep this debug statement
+    }
+});
 
 Route::get('/', function () {
     return view('welcome');
