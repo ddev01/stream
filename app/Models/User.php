@@ -23,6 +23,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'twitch_id',
+        'twitch_login',
+        'twitch_display_name',
+        'twitch_profile_image_url',
+        'twitch_broadcaster_type',
+        'twitch_created_at',
+        'twitch_description',
     ];
 
     /**

@@ -15,14 +15,17 @@ Route::get('/auth/twitch', function () {
 Route::get('/auth/twitch/callback', function () {
     try {
         $twitchUser = Socialite::driver('twitch')->user();
-        // No user by Twitch or email? Create a new one!
+
         $user = \App\Models\User::create([
             'name' => $twitchUser->name,
             'email' => $twitchUser->email,
             'twitch_id' => $twitchUser->id,
-            'twitch_username' => $twitchUser->nickname,
-            'twitch_display_name' => $twitchUser->name,
-            'twitch_avatar' => $twitchUser->avatar,
+            'twitch_login' => $twitchUser->nickname,
+            'twitch_display_name' => $twitchUser->user['display_name'] ?? $twitchUser->name,
+            'twitch_profile_image_url' => $twitchUser->user['profile_image_url'] ?? $twitchUser->avatar,
+            'twitch_broadcaster_type' => $twitchUser->user['broadcaster_type'] ?? null,
+            'twitch_created_at' => $twitchUser->user['created_at'] ?? null,
+            'twitch_description' => $twitchUser->user['description'] ?? null,
         ]);
 
         Auth::login($user);
