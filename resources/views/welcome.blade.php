@@ -21,6 +21,19 @@
         </style>
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+        @auth
+            <div class="mb-4">
+                <h2>Welcome, {{ auth()->user()->twitch_display_name }}!</h2>
+                <p>You have {{ auth()->user()->points ?? 0 }} points</p>
+            </div>
+        @else
+            <div class="mb-4">
+                <a href="/auth/twitch" class="bg-purple-600 text-white px-4 py-2 rounded">
+                    Sign in with Twitch
+                </a>
+            </div>
+        @endauth
+
         <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
             @if (Route::has('login'))
                 <nav class="flex items-center justify-end gap-4">
