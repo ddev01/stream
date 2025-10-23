@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -23,13 +24,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'twitch_id',
-        'twitch_login',
-        'twitch_display_name',
-        'twitch_profile_image_url',
-        'twitch_broadcaster_type',
-        'twitch_created_at',
-        'twitch_description',
     ];
 
     /**
@@ -67,5 +61,21 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Get the Twitch user associated with this Laravel user
+     */
+    public function twitchUser(): HasOne
+    {
+        return $this->hasOne(TwitchUser::class);
+    }
+
+    /**
+     * Get a specific stat value by name for this user
+     */
+    public function stat(string $name): mixed
+    {
+        return $this->twitchUser?->getStat($name);
     }
 }
