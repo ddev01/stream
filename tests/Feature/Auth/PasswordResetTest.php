@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Notification;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('reset password link screen can be rendered', function () {
+    $this->markTestSkipped('Password reset not applicable with OAuth-only authentication');
     $response = $this->get(route('password.request'));
 
     $response->assertStatus(200);
 });
 
 test('reset password link can be requested', function () {
+    $this->markTestSkipped('Password reset not applicable with OAuth-only authentication');
     Notification::fake();
 
     $user = User::factory()->create();
@@ -23,6 +25,7 @@ test('reset password link can be requested', function () {
 });
 
 test('reset password screen can be rendered', function () {
+    $this->markTestSkipped('Password reset not applicable with OAuth-only authentication');
     Notification::fake();
 
     $user = User::factory()->create();
@@ -39,6 +42,7 @@ test('reset password screen can be rendered', function () {
 });
 
 test('password can be reset with valid token', function () {
+    $this->markTestSkipped('Password reset not applicable with OAuth-only authentication');
     Notification::fake();
 
     $user = User::factory()->create();

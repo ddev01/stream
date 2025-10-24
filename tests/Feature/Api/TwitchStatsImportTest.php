@@ -29,7 +29,7 @@ function createAuthenticatedUser(): array
 
 test('can bulk import twitch stats', function () {
     $auth = createAuthenticatedUser();
-    
+
     $stats = [
         [
             'userId' => '112699727',
@@ -55,7 +55,7 @@ test('can bulk import twitch stats', function () {
     ];
 
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertSuccessful()
@@ -79,7 +79,7 @@ test('can bulk import twitch stats', function () {
 
 test('can update existing stats', function () {
     $auth = createAuthenticatedUser();
-    
+
     $twitchUser = TwitchUser::factory()->create(['twitch_id' => '112699727']);
     TwitchUserStat::factory()->create([
         'twitch_user_id' => $twitchUser->id,
@@ -98,7 +98,7 @@ test('can update existing stats', function () {
     ];
 
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertSuccessful()
@@ -115,7 +115,7 @@ test('can update existing stats', function () {
 
 test('creates twitch user if not exists when importing stats', function () {
     $auth = createAuthenticatedUser();
-    
+
     expect(TwitchUser::count())->toBe(0);
 
     $stats = [
@@ -128,7 +128,7 @@ test('creates twitch user if not exists when importing stats', function () {
     ];
 
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertSuccessful();
@@ -141,7 +141,7 @@ test('creates twitch user if not exists when importing stats', function () {
 
 test('validates required fields for stats import', function () {
     $auth = createAuthenticatedUser();
-    
+
     $stats = [
         [
             'userId' => '112699727',
@@ -150,7 +150,7 @@ test('validates required fields for stats import', function () {
     ];
 
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertStatus(422)
@@ -162,7 +162,7 @@ test('validates required fields for stats import', function () {
 
 test('handles json values in stats', function () {
     $auth = createAuthenticatedUser();
-    
+
     $stats = [
         [
             'userId' => '112699727',
@@ -174,7 +174,7 @@ test('handles json values in stats', function () {
     ];
 
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertSuccessful();
@@ -190,10 +190,52 @@ test('handles json values in stats', function () {
 
 test('requires stats array', function () {
     $auth = createAuthenticatedUser();
-    
+
     $response = $this->postJson('/api/twitch/stats', [], [
-        'Authorization' => 'Bearer ' . $auth['token'],
+        'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
     $response->assertStatus(422);
+});
+
+test('userName field is populated on import', function () {
+    $auth = createAuthenticatedUser();
+    $stats = [[
+        'userId' => '123',
+        'userName' => 'foobar',
+        'platform' => 'twitch',
+        'name' => 'watchtime',
+        'value' => 100,
+        'lastWrite' => now()->toISOString(),
+    ]];
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer '.$auth['token'],
+    ]);
+    $response->assertSuccessful();
+    $this->assertDatabaseHas('twitch_users', [
+        'twitch_id' => '123',
+        'display_name' => 'foobar',
+    ]);
+});
+
+test('empty stats array is handled gracefully', function () {
+    $auth = createAuthenticatedUser();
+    $stats = [];
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer '.$auth['token'],
+    ]);
+    $response->assertSuccessful();
+    $response->assertJson(['imported' => 0, 'updated' => 0]);
+});
+
+test('malformed data returns validation error', function () {
+    $auth = createAuthenticatedUser();
+    $stats = [
+        ['foo' => 'bar'], // nonconformant input
+    ];
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer '.$auth['token'],
+    ]);
+    $response->assertStatus(422);
+    $response->assertJson(['status' => 'error']);
 });

@@ -3,12 +3,14 @@
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('registration screen can be rendered', function () {
+    $this->markTestSkipped('Registration is disabled - OAuth only');
     $response = $this->get(route('register'));
 
     $response->assertStatus(200);
 });
 
 test('new users can register', function () {
+    $this->markTestSkipped('Registration is disabled - OAuth only');
     $response = $this->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'test@example.com',

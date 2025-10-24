@@ -50,7 +50,6 @@ test('twitch oauth enriches existing twitch user with stats', function () {
     // Create a Twitch user with stats (from C# import)
     $twitchUser = TwitchUser::factory()->create([
         'twitch_id' => '112699727',
-        'name' => 'mychoppaeats',
         'display_name' => 'mychoppaeats',
         'profile_image_url' => null,
         'user_id' => null,
@@ -164,4 +163,9 @@ test('twitch oauth handles existing user with same email', function () {
 
     $twitchUser = TwitchUser::first();
     expect($twitchUser->user_id)->toBe($existingUser->id);
+});
+
+test('twitch oauth redirect route returns socialite redirect', function () {
+    \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->redirect')->andReturn(redirect('https://twitch.tv/oauth/authorize'));
+    $this->get('/auth/twitch')->assertRedirect();
 });

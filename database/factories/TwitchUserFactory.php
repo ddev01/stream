@@ -23,11 +23,6 @@ class TwitchUserFactory extends Factory
         return [
             'twitch_id' => fake()->unique()->numerify('########'),
             'display_name' => fake()->userName(),
-            'role' => fake()->numberBetween(1, 4),
-            'subscribed' => fake()->boolean(30),
-            'type' => 'twitch',
-            'present' => fake()->boolean(50),
-            'last_active' => fake()->dateTimeBetween('-1 week', 'now'),
         ];
     }
 
@@ -52,26 +47,6 @@ class TwitchUserFactory extends Factory
             'description' => fake()->sentence(),
             'twitch_created_at' => fake()->dateTimeBetween('-5 years', '-1 year'),
             'email' => fake()->unique()->safeEmail(),
-        ]);
-    }
-
-    /**
-     * Indicate that the Twitch user is subscribed
-     */
-    public function subscribed(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'subscribed' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the Twitch user is present
-     */
-    public function present(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'present' => true,
         ]);
     }
 }

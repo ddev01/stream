@@ -22,7 +22,7 @@ class TwitchStatsController extends Controller
     public function bulkImport(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'stats' => 'required|array|min:0',
+            'stats' => 'present|array|min:0',
             'stats.*.userId' => 'required|string',
             'stats.*.userName' => 'nullable|string',
             'stats.*.platform' => 'nullable|string',

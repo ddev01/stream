@@ -166,3 +166,33 @@ test('twitch stats endpoint works with api user token', function () {
         'message' => 'Twitch stats imported successfully',
     ]);
 });
+
+test('api endpoint allows requests authenticated with development API key', function () {
+    // Emulate dev key from .env
+    config(['app.dev_api_key' => 'dev_helloworld12345']);
+    $stats = [[
+        'userId' => '789', 'userName' => 'zzz', 'platform' => 'twitch', 'name' => 'points', 'value' => 1,
+    ]];
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer dev_helloworld12345',
+    ]);
+    $response->assertStatus(200);
+    $this->assertDatabaseHas('twitch_users', ['twitch_id' => '789', 'display_name' => 'zzz']);
+});
+
+test('api endpoint accepts both Sanctum and dev API keys', function () {
+    config(['app.dev_api_key' => 'dev_helloworldabcde']);
+    $user = \App\Models\User::factory()->create();
+    $sanctum = $user->createToken('foo')->plainTextToken;
+    $stats = [[
+        'userId' => '900', 'userName' => 'a', 'platform' => 'twitch', 'name' => 'points', 'value' => 6,
+    ]];
+    $devResp = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer dev_helloworldabcde',
+    ]);
+    $devResp->assertStatus(200);
+    $sanctumResp = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer '.$sanctum,
+    ]);
+    $sanctumResp->assertStatus(200);
+});

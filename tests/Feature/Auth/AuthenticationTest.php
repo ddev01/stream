@@ -12,6 +12,7 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
+    $this->markTestSkipped('Email/password login disabled - OAuth only');
     $user = User::factory()->withoutTwoFactor()->create();
 
     $response = $this->post(route('login.store'), [
@@ -27,6 +28,7 @@ test('users can authenticate using the login screen', function () {
 });
 
 test('users can not authenticate with invalid password', function () {
+    $this->markTestSkipped('Email/password login disabled - OAuth only');
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [

@@ -18,11 +18,6 @@ class TwitchUser extends Model
         'twitch_id',
         'user_id',
         'display_name',
-        'role',
-        'subscribed',
-        'type',
-        'present',
-        'last_active',
         'profile_image_url',
         'broadcaster_type',
         'description',
@@ -36,11 +31,7 @@ class TwitchUser extends Model
     protected function casts(): array
     {
         return [
-            'subscribed' => 'boolean',
-            'present' => 'boolean',
-            'last_active' => 'datetime',
             'twitch_created_at' => 'datetime',
-            'role' => 'integer',
         ];
     }
 

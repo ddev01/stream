@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\URL;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('email verification screen can be rendered', function () {
+    $this->markTestSkipped('Email verification handled by Twitch OAuth');
     $user = User::factory()->unverified()->create();
 
     $response = $this->actingAs($user)->get(route('verification.notice'));
@@ -16,6 +17,7 @@ test('email verification screen can be rendered', function () {
 });
 
 test('email can be verified', function () {
+    $this->markTestSkipped('Email verification handled by Twitch OAuth');
     $user = User::factory()->unverified()->create();
 
     Event::fake();
@@ -35,6 +37,7 @@ test('email can be verified', function () {
 });
 
 test('email is not verified with invalid hash', function () {
+    $this->markTestSkipped('Email verification handled by Twitch OAuth');
     $user = User::factory()->unverified()->create();
 
     $verificationUrl = URL::temporarySignedRoute(
@@ -49,6 +52,7 @@ test('email is not verified with invalid hash', function () {
 });
 
 test('already verified user visiting verification link is redirected without firing event again', function () {
+    $this->markTestSkipped('Email verification handled by Twitch OAuth');
     $user = User::factory()->create([
         'email_verified_at' => now(),
     ]);
