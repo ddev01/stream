@@ -18,6 +18,11 @@ return new class extends Migration
 
             // Basic fields from users.dat
             $table->string('display_name')->nullable();
+            $table->unsignedTinyInteger('role')->nullable();
+            $table->boolean('subscribed')->default(false);
+            $table->string('type')->default('twitch');
+            $table->boolean('present')->default(false);
+            $table->timestamp('last_active')->nullable();
 
             // OAuth-enriched fields (filled on sign-in)
             $table->string('profile_image_url')->nullable();

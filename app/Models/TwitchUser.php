@@ -17,7 +17,6 @@ class TwitchUser extends Model
     protected $fillable = [
         'twitch_id',
         'user_id',
-        'name',
         'display_name',
         'role',
         'subscribed',

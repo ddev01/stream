@@ -22,7 +22,6 @@ class TwitchUserFactory extends Factory
     {
         return [
             'twitch_id' => fake()->unique()->numerify('########'),
-            'name' => fake()->userName(),
             'display_name' => fake()->userName(),
             'role' => fake()->numberBetween(1, 4),
             'subscribed' => fake()->boolean(30),
