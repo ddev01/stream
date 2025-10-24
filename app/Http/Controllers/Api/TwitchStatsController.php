@@ -24,6 +24,7 @@ class TwitchStatsController extends Controller
         $validator = Validator::make($request->all(), [
             'stats' => 'required|array|min:0',
             'stats.*.userId' => 'required|string',
+            'stats.*.userName' => 'nullable|string',
             'stats.*.platform' => 'nullable|string',
             'stats.*.name' => 'required|string',
             'stats.*.value' => 'required',
@@ -47,10 +48,12 @@ class TwitchStatsController extends Controller
 
         try {
             foreach ($stats as $statData) {
-                // Find or create the Twitch user
-                $twitchUser = TwitchUser::firstOrCreate(
+                // Find or create the Twitch user, and update username if provided
+                $twitchUser = TwitchUser::updateOrCreate(
                     ['twitch_id' => $statData['userId']],
-                    ['type' => $statData['platform'] ?? 'twitch']
+                    [
+                        'display_name' => $statData['userName'] ?? null,
+                    ]
                 );
 
                 // Upsert the stat

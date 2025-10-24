@@ -20,15 +20,12 @@ Route::get('/auth/twitch/callback', function () {
         $twitchUser = \App\Models\TwitchUser::firstOrCreate(
             ['twitch_id' => $twitchOAuthUser->id],
             [
-                'name' => $twitchOAuthUser->nickname,
                 'display_name' => $twitchOAuthUser->user['display_name'] ?? $twitchOAuthUser->name,
-                'type' => 'twitch',
             ]
         );
 
         // Enrich with OAuth data
         $twitchUser->update([
-            'name' => $twitchOAuthUser->nickname,
             'display_name' => $twitchOAuthUser->user['display_name'] ?? $twitchOAuthUser->name,
             'profile_image_url' => $twitchOAuthUser->user['profile_image_url'] ?? $twitchOAuthUser->avatar,
             'broadcaster_type' => $twitchOAuthUser->user['broadcaster_type'] ?? null,
