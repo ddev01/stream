@@ -1,59 +1,13 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\TwitchAuthController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
-use Laravel\Socialite\Facades\Socialite;
 use Livewire\Volt\Volt;
 
 // Twitch OAuth routes
-Route::get('/auth/twitch', function () {
-    return Socialite::driver('twitch')->redirect();
-});
-
-Route::get('/auth/twitch/callback', function () {
-    try {
-        $twitchOAuthUser = Socialite::driver('twitch')->user();
-
-        // Find or create the TwitchUser record
-        $twitchUser = \App\Models\TwitchUser::firstOrCreate(
-            ['twitch_id' => $twitchOAuthUser->id],
-            [
-                'display_name' => $twitchOAuthUser->user['display_name'] ?? $twitchOAuthUser->name,
-            ]
-        );
-
-        // Enrich with OAuth data
-        $twitchUser->update([
-            'display_name' => $twitchOAuthUser->user['display_name'] ?? $twitchOAuthUser->name,
-            'profile_image_url' => $twitchOAuthUser->user['profile_image_url'] ?? $twitchOAuthUser->avatar,
-            'broadcaster_type' => $twitchOAuthUser->user['broadcaster_type'] ?? null,
-            'twitch_created_at' => $twitchOAuthUser->user['created_at'] ?? null,
-            'description' => $twitchOAuthUser->user['description'] ?? null,
-            'email' => $twitchOAuthUser->email,
-        ]);
-
-        // Find or create the Laravel User
-        $user = User::firstOrCreate(
-            ['email' => $twitchOAuthUser->email],
-            [
-                'name' => $twitchOAuthUser->user['display_name'] ?? $twitchOAuthUser->name,
-            ]
-        );
-
-        // Link TwitchUser to User
-        $twitchUser->user_id = $user->id;
-        $twitchUser->save();
-
-        Auth::login($user);
-
-        return redirect('/dashboard');
-
-    } catch (\Exception $e) {
-        throw $e; // User requested to keep this debug statement
-    }
-});
+Route::get('/auth/twitch', [TwitchAuthController::class, 'redirect']);
+Route::get('/auth/twitch/callback', [TwitchAuthController::class, 'callback']);
 
 Route::get('/', function () {
     return view('welcome');
