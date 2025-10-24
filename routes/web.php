@@ -59,6 +59,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Redirect register to login since we only use Twitch OAuth
+Route::get('/register', function () {
+    return redirect('/login');
+});
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
