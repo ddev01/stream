@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Development API Key
+    |--------------------------------------------------------------------------
+    |
+    | This key is used for development purposes to authenticate API requests
+    | without requiring database-generated tokens. Set this in your .env file
+    | as DEV_API_KEY for development convenience.
+    |
+    */
+
+    'dev_api_key' => env('DEV_API_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
