@@ -19,8 +19,8 @@ test('twitch stats endpoint requires authentication', function () {
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ]);
 
     $response->assertUnauthorized();
@@ -46,10 +46,10 @@ test('twitch stats endpoint accepts valid token', function () {
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ], [
-        'Authorization' => 'Bearer ' . $token->plainTextToken,
+        'Authorization' => 'Bearer '.$token->plainTextToken,
     ]);
 
     $response->assertSuccessful();
@@ -69,8 +69,8 @@ test('twitch stats endpoint rejects invalid token', function () {
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ], [
         'Authorization' => 'Bearer invalid-token-12345',
     ]);
@@ -89,8 +89,8 @@ test('twitch stats endpoint rejects malformed authorization header', function ()
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ], [
         'Authorization' => 'InvalidFormat token-12345',
     ]);
@@ -108,7 +108,7 @@ test('twitch stats endpoint rejects expired token', function () {
     ]);
 
     $token = $user->createToken('test-token', ['*']);
-    
+
     // Manually expire the token by updating its expires_at
     $personalAccessToken = PersonalAccessToken::findToken($token->plainTextToken);
     $personalAccessToken->expires_at = now()->subHour();
@@ -123,14 +123,14 @@ test('twitch stats endpoint rejects expired token', function () {
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ], [
-        'Authorization' => 'Bearer ' . $token->plainTextToken,
+        'Authorization' => 'Bearer '.$token->plainTextToken,
     ]);
 
     $response->assertUnauthorized();
-    $response->assertJson(['message' => 'Unauthenticated.']);
+    $response->assertJson(['message' => 'Token expired.']);
 });
 
 test('twitch stats endpoint works with api user token', function () {
@@ -154,10 +154,10 @@ test('twitch stats endpoint works with api user token', function () {
                 'name' => 'points',
                 'value' => 100,
                 'lastWrite' => now()->toISOString(),
-            ]
-        ]
+            ],
+        ],
     ], [
-        'Authorization' => 'Bearer ' . $token->plainTextToken,
+        'Authorization' => 'Bearer '.$token->plainTextToken,
     ]);
 
     $response->assertSuccessful();
