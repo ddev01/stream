@@ -154,10 +154,7 @@ test('validates required fields for stats import', function () {
     ]);
 
     $response->assertStatus(422)
-        ->assertJson([
-            'status' => 'error',
-            'message' => 'Validation failed',
-        ]);
+        ->assertJsonValidationErrors(['stats.0.name', 'stats.0.value']);
 });
 
 test('handles json values in stats', function () {
@@ -236,6 +233,6 @@ test('malformed data returns validation error', function () {
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
-    $response->assertStatus(422);
-    $response->assertJson(['status' => 'error']);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['stats.0.userId', 'stats.0.name', 'stats.0.value']);
 });
