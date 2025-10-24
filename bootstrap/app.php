@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'dev.api' => \App\Http\Middleware\DevelopmentApiAuth::class,
         ]);
+
+        // Redirect guests to /login instead of route('login')
+        $middleware->redirectGuestsTo('/login');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

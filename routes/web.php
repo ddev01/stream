@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\TwitchAuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
 // Twitch OAuth routes
@@ -13,10 +14,22 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Login page - displays Twitch OAuth button
+Route::view('/login', 'livewire.auth.login')->name('login');
+
 // Redirect register to login since we only use Twitch OAuth
 Route::get('/register', function () {
     return redirect('/login');
 });
+
+// Logout route
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/');
+})->name('logout');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -28,15 +41,4 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/password', 'settings.password')->name('user-password.edit');
     Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
-
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
 });
