@@ -9,8 +9,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Twitch data ingestion endpoints (protected by API token)
-Route::post('/twitch/stats', [TwitchStatsController::class, 'bulkImport'])->middleware('auth:sanctum');
+// Twitch data ingestion endpoints (protected by API token or dev key)
+Route::post('/twitch/stats', [TwitchStatsController::class, 'bulkImport'])->middleware('dev.api');
 
 // Simple endpoint to receive data from external applications (legacy)
 Route::post('/receive-data', function (Request $request) {
