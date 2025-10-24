@@ -4,11 +4,32 @@ declare(strict_types=1);
 
 use App\Models\TwitchUser;
 use App\Models\TwitchUserStat;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
+// Helper function to create authenticated user and token
+function createAuthenticatedUser(): array
+{
+    $user = User::factory()->create([
+        'name' => 'Test API User',
+        'email' => 'api@test.local',
+        'password' => Hash::make('password'),
+    ]);
+
+    $token = $user->createToken('test-token', ['*']);
+
+    return [
+        'user' => $user,
+        'token' => $token->plainTextToken,
+    ];
+}
+
 test('can bulk import twitch stats', function () {
+    $auth = createAuthenticatedUser();
+    
     $stats = [
         [
             'userId' => '112699727',
@@ -33,7 +54,9 @@ test('can bulk import twitch stats', function () {
         ],
     ];
 
-    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats]);
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertSuccessful()
         ->assertJson([
@@ -55,6 +78,8 @@ test('can bulk import twitch stats', function () {
 });
 
 test('can update existing stats', function () {
+    $auth = createAuthenticatedUser();
+    
     $twitchUser = TwitchUser::factory()->create(['twitch_id' => '112699727']);
     TwitchUserStat::factory()->create([
         'twitch_user_id' => $twitchUser->id,
@@ -72,7 +97,9 @@ test('can update existing stats', function () {
         ],
     ];
 
-    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats]);
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertSuccessful()
         ->assertJson([
@@ -87,6 +114,8 @@ test('can update existing stats', function () {
 });
 
 test('creates twitch user if not exists when importing stats', function () {
+    $auth = createAuthenticatedUser();
+    
     expect(TwitchUser::count())->toBe(0);
 
     $stats = [
@@ -98,7 +127,9 @@ test('creates twitch user if not exists when importing stats', function () {
         ],
     ];
 
-    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats]);
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertSuccessful();
 
@@ -109,6 +140,8 @@ test('creates twitch user if not exists when importing stats', function () {
 });
 
 test('validates required fields for stats import', function () {
+    $auth = createAuthenticatedUser();
+    
     $stats = [
         [
             'userId' => '112699727',
@@ -116,7 +149,9 @@ test('validates required fields for stats import', function () {
         ],
     ];
 
-    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats]);
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertStatus(422)
         ->assertJson([
@@ -126,6 +161,8 @@ test('validates required fields for stats import', function () {
 });
 
 test('handles json values in stats', function () {
+    $auth = createAuthenticatedUser();
+    
     $stats = [
         [
             'userId' => '112699727',
@@ -136,7 +173,9 @@ test('handles json values in stats', function () {
         ],
     ];
 
-    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats]);
+    $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertSuccessful();
 
@@ -150,7 +189,11 @@ test('handles json values in stats', function () {
 });
 
 test('requires stats array', function () {
-    $response = $this->postJson('/api/twitch/stats', []);
+    $auth = createAuthenticatedUser();
+    
+    $response = $this->postJson('/api/twitch/stats', [], [
+        'Authorization' => 'Bearer ' . $auth['token'],
+    ]);
 
     $response->assertStatus(422);
 });
