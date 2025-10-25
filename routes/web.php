@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\TwitchAuthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -11,7 +12,7 @@ Route::get('/auth/twitch', [TwitchAuthController::class, 'redirect']);
 Route::get('/auth/twitch/callback', [TwitchAuthController::class, 'callback']);
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('dashboard');
 })->name('home');
 
 // Login page - displays Twitch OAuth button
@@ -31,8 +32,7 @@ Route::post('/logout', function (Request $request) {
     return redirect('/');
 })->name('logout');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+Route::get('dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
