@@ -7,15 +7,6 @@
 {$CADDY_SERVER_SERVER_NAME} {
 	log {
 		level WARN
-
-		format filter {
-			wrap {$CADDY_SERVER_LOGGER}
-			fields {
-				uri query {
-					replace authorization REDACTED
-				}
-			}
-		}
 	}
 
 	route {
