@@ -52,6 +52,7 @@ services:
     environment:
       INERTIA_SSR: false
       SERVER_NAME: ':80'
+      CADDY_SERVER_SERVER_NAME: ':80'
     networks:
       - internal
       - web
