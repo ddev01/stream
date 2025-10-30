@@ -1,21 +1,11 @@
-{
-	{$CADDY_GLOBAL_OPTIONS}
-
-	frankenphp
-}
-
-{$CADDY_SERVER_SERVER_NAME} {
-	log {
-		level WARN
-	}
-
 	route {
-		@reverb {
-			path /app/* /apps/*
-		}
-		handle @reverb {
-			reverse_proxy reverb:8080
-		}
+		# Reverb proxy (only if reverb service exists)
+		# @reverb {
+		# 	path /app/* /apps/*
+		# }
+		# handle @reverb {
+		# 	reverse_proxy reverb:8080
+		# }
 
 		root * "{$APP_PUBLIC_PATH}"
 		encode zstd br gzip 
@@ -38,4 +28,3 @@
 			hide *.php
 		}
 	}
-}

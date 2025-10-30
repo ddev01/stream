@@ -53,6 +53,10 @@ services:
       INERTIA_SSR: false
       SERVER_NAME: ':80'
       CADDY_SERVER_SERVER_NAME: ':80'
+      APP_PUBLIC_PATH: /app/public
+      ENV_ROOT: /app
+      ENV_USER: www-data
+      APP_HOST: '${APP_HOST}' 
     networks:
       - internal
       - web
