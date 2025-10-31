@@ -6,26 +6,26 @@ x-logging: &default-logging
 x-network: &default-network
   - internal
 x-base: &base
-  image: '${IMAGE_NAME:-app}:latest'
+  image: "${IMAGE_NAME:-app}:latest"
   build:
     context: .
     dockerfile: Dockerfile
     target: prod
     args:
       APP_ENV: production
-      WWWUSER: '${HOST_UID:-1000}'
-      WWWGROUP: '${HOST_GID:-1000}'
-  user: '${HOST_UID:-1000}:${HOST_GID:-1000}'
+      WWWUSER: "${HOST_UID:-1000}"
+      WWWGROUP: "${HOST_GID:-1000}"
+  user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
   ulimits:
     nofile:
       soft: 20000
       hard: 40000
   security_opt:
-    - 'no-new-privileges:true'
+    - "no-new-privileges:true"
   volumes:
-    - 'app_public:/app/storage/app/public'
-    - 'app_logs:/app/storage/logs'
-    - 'app_cache:/app/bootstrap/cache'
+    - "app_public:/app/storage/app/public"
+    - "app_logs:/app/storage/logs"
+    - "app_cache:/app/bootstrap/cache"
   logging:
     driver: json-file
     options:
@@ -44,28 +44,29 @@ services:
       test:
         - CMD
         - curl
-        - '--fail'
-        - 'localhost:80/up'
+        - "--fail"
+        - "localhost:80/up"
       start_period: 5s
       interval: 10s
       retries: 12
     environment:
       INERTIA_SSR: false
-      SERVER_NAME: ':80'
-      CADDY_SERVER_SERVER_NAME: ':80'
+      SERVER_NAME: ":80"
+      CADDY_SERVER_SERVER_NAME: ":80"
       APP_PUBLIC_PATH: /app/public
       ENV_ROOT: /app
       ENV_USER: www-data
-      APP_HOST: '${APP_HOST}' 
+      APP_HOST: "${APP_HOST}"
     networks:
       - internal
       - web
     labels:
       - traefik.enable=true
-      - 'traefik.http.routers.stream.rule=Host(`${APP_HOST}`)'
+      - "traefik.http.routers.stream.rule=Host(`${APP_HOST}`)"
       - traefik.http.routers.stream.entrypoints=websecure
       - traefik.http.routers.stream.tls.certresolver=le
       - traefik.http.services.stream.loadbalancer.server.port=80
+      - traefik.http.services.stream.loadbalancer.server.timeout=90s
   horizon:
     <<: *base
     environment:
@@ -75,7 +76,7 @@ services:
       app:
         condition: service_healthy
   valkey:
-    image: 'valkey/valkey:alpine'
+    image: "valkey/valkey:alpine"
     healthcheck:
       test:
         - CMD
@@ -89,33 +90,33 @@ services:
         hard: 40000
     command:
       - valkey-server
-      - '--requirepass'
-      - '${REDIS_PASSWORD:-cipassword}'
-      - '--maxmemory'
+      - "--requirepass"
+      - "${REDIS_PASSWORD:-cipassword}"
+      - "--maxmemory"
       - 2gb
     security_opt:
-      - 'no-new-privileges:true'
+      - "no-new-privileges:true"
     volumes:
-      - 'stack-valkey:/data'
+      - "stack-valkey:/data"
     networks: *default-network
     restart: always
     logging: *default-logging
   pgsql:
-    image: 'postgres:17'
+    image: "postgres:17"
     healthcheck:
       test:
         - CMD-SHELL
-        - 'pg_isready -U $${POSTGRES_USER}'
+        - "pg_isready -U $${POSTGRES_USER}"
       interval: 10s
       timeout: 5s
       retries: 5
     environment:
-      POSTGRES_DB: '${DB_DATABASE}'
-      POSTGRES_USER: '${DB_USERNAME}'
-      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+      POSTGRES_DB: "${DB_DATABASE}"
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      - 'postgres_data:/var/lib/postgresql/data'
-      - 'postgres_shared:/shared'
+      - "postgres_data:/var/lib/postgresql/data"
+      - "postgres_shared:/shared"
     networks: *default-network
     restart: always
     logging: *default-logging

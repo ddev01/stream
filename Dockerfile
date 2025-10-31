@@ -17,6 +17,7 @@ USER ${USER}
 
 COPY --chown=${USER}:${USER} deployment/supervisord.conf /etc/
 COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+COPY --chown=${USER}:${USER} deployment/Caddyfile /app/deployment/Caddyfile
 
 ###########################################
 
@@ -49,9 +50,18 @@ RUN npm run build
 
 FROM common AS prod
 
+# Copy application files (including public, but we'll replace it with built version)
 COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public public
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules node_modules
+
+# Remove the source public directory to avoid conflicts
+RUN rm -rf ${ROOT}/public
+
+# Copy the COMPLETE built public directory from build stage
+# This includes index.php, .htaccess, build/, and all other public files
+COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public ${ROOT}/public
+
+# Copy node_modules from build stage
+COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules ${ROOT}/node_modules
 
 RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
     && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache
