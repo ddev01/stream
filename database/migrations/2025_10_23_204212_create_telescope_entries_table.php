@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function getConnection(): ?string
     {
+        // Only use Telescope connection if Telescope is installed
+        if (! class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
+            return null;
+        }
+
         return config('telescope.storage.database.connection');
     }
 
@@ -19,7 +24,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $schema = Schema::connection($this->getConnection());
+        // Skip migration if Telescope is not installed
+        if (! class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
+            return;
+        }
+
+        $connection = $this->getConnection();
+        $schema = $connection ? Schema::connection($connection) : Schema::connection();
 
         $schema->create('telescope_entries', function (Blueprint $table) {
             $table->bigIncrements('sequence');
@@ -61,7 +72,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $schema = Schema::connection($this->getConnection());
+        // Skip migration if Telescope is not installed
+        if (! class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
+            return;
+        }
+
+        $connection = $this->getConnection();
+        $schema = $connection ? Schema::connection($connection) : Schema::connection();
 
         $schema->dropIfExists('telescope_entries_tags');
         $schema->dropIfExists('telescope_entries');
