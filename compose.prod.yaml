@@ -66,7 +66,6 @@ services:
       - traefik.http.routers.stream.entrypoints=websecure
       - traefik.http.routers.stream.tls.certresolver=le
       - traefik.http.services.stream.loadbalancer.server.port=80
-      - traefik.http.services.stream.loadbalancer.server.timeout=90s
   horizon:
     <<: *base
     environment:
