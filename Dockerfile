@@ -1,70 +1,56 @@
-ARG PHP_VERSION=8.4
+############################################
+# Base Image
+############################################
 
-FROM fouteox/laravel-php-base:${PHP_VERSION} AS base
+# Learn more about the Server Side Up PHP Docker Images at:
+# https://serversideup.net/open-source/docker-php/
+FROM serversideup/php:8.4-fpm-nginx-alpine AS base
 
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
+## Uncomment if you need to install additional PHP extensions
+# USER root
+# RUN install-php-extensions bcmath gd
 
-ENV USER=www-data \
-    ROOT=/app
+############################################
+# Development Image
+############################################
+FROM base AS development
 
-RUN userdel --remove --force www-data \
-    && groupadd --force -g ${WWWGROUP} ${USER} \
-    && useradd -ms /bin/bash --no-log-init --no-user-group -g ${WWWGROUP} -u ${WWWUSER} ${USER} \
-    && chown -R ${USER}:${USER} ${ROOT} /var/{log,run}
+# We can pass USER_ID and GROUP_ID as build arguments
+# to ensure the www-data user has the same UID and GID
+# as the user running Docker.
+ARG USER_ID
+ARG GROUP_ID
 
-USER ${USER}
+# Switch to root so we can set the user ID and group ID
+USER root
 
-COPY --chown=${USER}:${USER} deployment/supervisord.conf /etc/
-COPY --chown=${USER}:${USER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
-COPY --chown=${USER}:${USER} deployment/Caddyfile /app/deployment/Caddyfile
+# Set the user ID and group ID for www-data
+RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID  && \
+    docker-php-serversideup-set-file-permissions --owner $USER_ID:$GROUP_ID --service nginx
 
-###########################################
+# Drop privileges back to www-data    
+USER www-data
 
-FROM base AS common
+############################################
+# CI image
+############################################
+FROM base AS ci
 
-COPY --link --chown=${WWWUSER}:${WWWGROUP} composer.json composer.lock ./
+# Sometimes CI images need to run as root
+# so we set the ROOT user and configure
+# the PHP-FPM pool to run as www-data
+USER root
+RUN echo "user = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf && \
+    echo "group = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf
 
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-ansi \
-    --no-scripts \
-    --audit
+############################################
+# Production Image
+############################################
+FROM base AS deploy
+COPY --chown=www-data:www-data . /var/www/html
 
-###########################################
-# Build frontend assets
-###########################################
+# Create the SQLite directory and set the owner to www-data (remove this if you're not using SQLite)
+RUN mkdir -p /var/www/html/.infrastructure/volume_data/sqlite/ && \
+    chown -R www-data:www-data /var/www/html/.infrastructure/volume_data/sqlite/
 
-FROM common AS build
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} package*.json ./
-
-RUN npm install
-
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
-
-RUN npm run build
-
-###########################################
-
-FROM common AS prod
-
-# Copy application files (including public, but we'll replace it with built version)
-COPY --link --chown=${WWWUSER}:${WWWGROUP} . .
-
-# Remove the source public directory to avoid conflicts
-RUN rm -rf ${ROOT}/public
-
-# Copy the COMPLETE built public directory from build stage
-# This includes index.php, .htaccess, build/, and all other public files
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/public ${ROOT}/public
-
-# Copy node_modules from build stage
-COPY --link --chown=${WWWUSER}:${WWWGROUP} --from=build ${ROOT}/node_modules ${ROOT}/node_modules
-
-RUN mkdir -p ${ROOT}/storage/framework/{sessions,views,cache,testing} ${ROOT}/storage/logs ${ROOT}/bootstrap/cache \
-    && chmod -R a+rw ${ROOT}/storage ${ROOT}/bootstrap/cache
-
-RUN composer dump-autoload --classmap-authoritative --no-dev --no-scripts \
-    && composer clear-cache
+USER www-data
