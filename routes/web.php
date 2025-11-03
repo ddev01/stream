@@ -37,6 +37,14 @@ Route::get('/leaderboards/points', function () {
     return view('points-leaderboard');
 })->name('leaderboards.points');
 
+Route::get('/leaderboards/watchtime', function () {
+    return view('watchtime-leaderboard');
+})->name('leaderboards.watchtime');
+
+Route::get('/leaderboards/top-three', function () {
+    return view('top-three-leaderboard');
+})->name('leaderboards.top-three');
+
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 

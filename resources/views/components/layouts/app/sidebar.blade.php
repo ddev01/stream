@@ -15,6 +15,8 @@
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
 					<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points Leaderboard') }}</flux:navlist.item>
+					<flux:navlist.item icon="clock" :href="route('leaderboards.watchtime')" :current="request()->routeIs('leaderboards.watchtime')" wire:navigate>{{ __('Watchtime Leaderboard') }}</flux:navlist.item>
+					<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count Leaderboard') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
