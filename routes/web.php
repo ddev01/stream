@@ -32,8 +32,18 @@ Route::post('/logout', function (Request $request) {
     return redirect('/');
 })->name('logout');
 
+
+Route::get('/leaderboards/points', function () {
+    return view('points-leaderboard');
+})->name('leaderboards.points');
+
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
+
+Route::get('users/{user}', function (App\Models\User $user) {
+    return view('users.show', ['user' => $user]);
+})->name('users.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
