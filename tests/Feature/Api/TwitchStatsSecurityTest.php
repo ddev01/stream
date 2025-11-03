@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -52,11 +53,15 @@ test('twitch stats endpoint accepts valid token', function () {
         'Authorization' => 'Bearer '.$token->plainTextToken,
     ]);
 
-    $response->assertSuccessful();
-    $response->assertJson([
-        'status' => 'success',
-        'message' => 'Twitch stats imported successfully',
-    ]);
+    $response->assertStatus(202)
+        ->assertJson([
+            'status' => 'queued',
+            'message' => 'Twitch stats import queued for processing',
+            'records' => 1,
+        ]);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 });
 
 test('twitch stats endpoint rejects invalid token', function () {
@@ -160,11 +165,15 @@ test('twitch stats endpoint works with api user token', function () {
         'Authorization' => 'Bearer '.$token->plainTextToken,
     ]);
 
-    $response->assertSuccessful();
-    $response->assertJson([
-        'status' => 'success',
-        'message' => 'Twitch stats imported successfully',
-    ]);
+    $response->assertStatus(202)
+        ->assertJson([
+            'status' => 'queued',
+            'message' => 'Twitch stats import queued for processing',
+            'records' => 1,
+        ]);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 });
 
 test('api endpoint allows requests authenticated with development API key', function () {
@@ -176,7 +185,11 @@ test('api endpoint allows requests authenticated with development API key', func
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer dev_helloworld12345',
     ]);
-    $response->assertStatus(200);
+    $response->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
+
     $this->assertDatabaseHas('twitch_users', ['twitch_id' => '789', 'display_name' => 'zzz']);
 });
 
@@ -190,9 +203,16 @@ test('api endpoint accepts both Sanctum and dev API keys', function () {
     $devResp = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer dev_helloworldabcde',
     ]);
-    $devResp->assertStatus(200);
+    $devResp->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
+
     $sanctumResp = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer '.$sanctum,
     ]);
-    $sanctumResp->assertStatus(200);
+    $sanctumResp->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 });

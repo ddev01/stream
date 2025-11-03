@@ -6,6 +6,7 @@ use App\Models\TwitchUser;
 use App\Models\TwitchUserStat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
@@ -58,13 +59,15 @@ test('can bulk import twitch stats', function () {
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
-    $response->assertSuccessful()
+    $response->assertStatus(202)
         ->assertJson([
-            'status' => 'success',
-            'imported' => 3,
-            'updated' => 0,
-            'total' => 3,
+            'status' => 'queued',
+            'message' => 'Twitch stats import queued for processing',
+            'records' => 3,
         ]);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     expect(TwitchUser::count())->toBe(2)
         ->and(TwitchUserStat::count())->toBe(3);
@@ -101,13 +104,15 @@ test('can update existing stats', function () {
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
-    $response->assertSuccessful()
+    $response->assertStatus(202)
         ->assertJson([
-            'status' => 'success',
-            'imported' => 0,
-            'updated' => 1,
-            'total' => 1,
+            'status' => 'queued',
+            'message' => 'Twitch stats import queued for processing',
+            'records' => 1,
         ]);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     $pointsStat = $twitchUser->stats()->where('name', 'points')->first();
     expect($pointsStat->value)->toBe('5000');
@@ -131,7 +136,10 @@ test('creates twitch user if not exists when importing stats', function () {
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
-    $response->assertSuccessful();
+    $response->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     expect(TwitchUser::count())->toBe(1);
     $twitchUser = TwitchUser::where('twitch_id', '999999999')->first();
@@ -174,7 +182,10 @@ test('handles json values in stats', function () {
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
 
-    $response->assertSuccessful();
+    $response->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     $twitchUser = TwitchUser::where('twitch_id', '112699727')->first();
     $stat = $twitchUser->stats()->where('name', 'complexData')->first();
@@ -208,7 +219,11 @@ test('userName field is populated on import', function () {
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
-    $response->assertSuccessful();
+    $response->assertStatus(202);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
+
     $this->assertDatabaseHas('twitch_users', [
         'twitch_id' => '123',
         'display_name' => 'foobar',
@@ -221,8 +236,15 @@ test('empty stats array is handled gracefully', function () {
     $response = $this->postJson('/api/twitch/stats', ['stats' => $stats], [
         'Authorization' => 'Bearer '.$auth['token'],
     ]);
-    $response->assertSuccessful();
-    $response->assertJson(['imported' => 0, 'updated' => 0]);
+    $response->assertStatus(202)
+        ->assertJson([
+            'status' => 'queued',
+            'message' => 'Twitch stats import queued for processing',
+            'records' => 0,
+        ]);
+
+    // Process the queued job
+    Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 });
 
 test('malformed data returns validation error', function () {
