@@ -1,8 +1,36 @@
 services:
-
   traefik:
     image: traefik:v3.5
 
   php:
     depends_on:
       - traefik
+
+  postgres:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-laravel}"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7.4
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  horizon:
+    entrypoint: ''
+    command: ["php", "/var/www/html/artisan", "horizon"]
+    healthcheck:
+      test: ["CMD", "php", "/var/www/html/artisan", "horizon:status"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s

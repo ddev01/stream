@@ -56,19 +56,25 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD:-password}"
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
     ports:
-      - "5432:5432"
+      - target: 5432
+        published: 5432
+        mode: host
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - ./.infrastructure/volume_data/postgres/database_data/:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-laravel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
+    image: redis:7.4
+    command: "redis-server --appendonly yes --requirepass redispassword"
+    volumes:
+      - ./.infrastructure/volume_data/redis/data:/data
     networks:
       - development
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_dev_data:/data
 
   ssh:
     # We use an SSH image so we can securely tunnel into the Docker network with 
@@ -91,11 +97,35 @@ services:
     networks:
       - development
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  horizon:
+    build:
+      target: development
+      args:
+        USER_ID: ${SPIN_USER_ID}
+        GROUP_ID: ${SPIN_GROUP_ID}
+    entrypoint: ''
+    command: ["php", "/var/www/html/artisan", "horizon"]
+    volumes:
+      - .:/var/www/html/
+    networks:
+      - development
+    depends_on:
+      redis:
+        condition: service_healthy
+      php:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "php", "/var/www/html/artisan", "horizon:status"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
 
 volumes:
-  postgres_dev_data:
-  redis_dev_data:
   tunnel_ssh_host_keys_dev:
 
 networks:

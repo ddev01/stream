@@ -96,7 +96,6 @@ services:
       - postgres_shared:/shared
 
   redis:
-    image: redis:7-alpine
     command: "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
@@ -116,6 +115,7 @@ services:
 
   horizon:
     image: ${SPIN_IMAGE_DOCKERFILE}
+    entrypoint: ''
     command: ["php", "/var/www/html/artisan", "horizon"]
     stop_grace_period: 30s
     stop_signal: SIGTERM
