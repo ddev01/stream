@@ -69,7 +69,7 @@ services:
       start_period: 10s
 
   redis:
-    command: "redis-server --appendonly yes --requirepass redispassword}"
+    command: "redis-server --appendonly yes --requirepass redispassword"
     volumes:
       - ./.infrastructure/volume_data/redis/data:/data
     networks:
