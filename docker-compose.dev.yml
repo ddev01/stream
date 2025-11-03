@@ -69,21 +69,21 @@ services:
       start_period: 10s
 
   redis:
-    command: "redis-server --appendonly yes --requirepass redispassword"
+    command: "redis-server --appendonly yes --requirepass redispassword}"
     volumes:
       - ./.infrastructure/volume_data/redis/data:/data
     networks:
       - development
 
   ssh:
-    # We use an SSH image so we can securely tunnel into the Docker network with 
+    # We use an SSH image so we can securely tunnel into the Docker network with
     # tools like Sequel Pro, TablePlus, Sequel Ace, etc.
     # Learn more how to secure your tunnel here: https://github.com/serversideup/docker-ssh
     image: serversideup/docker-ssh:v2.0.0
     ports:
       - "2222:2222"
     environment:
-      # Change the keys below to your own keys 
+      # Change the keys below to your own keys
       AUTHORIZED_KEYS: >
         "# Start Keys
          ssh-ed25519 1234567890abcdefghijklmnoqrstuvwxyz user-a
@@ -105,7 +105,6 @@ services:
       args:
         USER_ID: ${SPIN_USER_ID}
         GROUP_ID: ${SPIN_GROUP_ID}
-    entrypoint: ''
     command: ["php", "/var/www/html/artisan", "horizon"]
     volumes:
       - .:/var/www/html/

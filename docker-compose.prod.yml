@@ -115,7 +115,6 @@ services:
 
   horizon:
     image: ${SPIN_IMAGE_DOCKERFILE}
-    entrypoint: ''
     command: ["php", "/var/www/html/artisan", "horizon"]
     stop_grace_period: 30s
     stop_signal: SIGTERM
