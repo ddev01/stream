@@ -68,7 +68,7 @@ class PointsLeaderboardTable extends DataTableComponent
                 })
                 ->searchable(function (Builder $query, $searchTerm) {
                     return $query->whereHas('twitchUser', function ($q) use ($searchTerm) {
-                        $q->where('display_name', 'like', "%{$searchTerm}%");
+                        $q->where('display_name', 'ilike', "%{$searchTerm}%");
                     });
                 }),
             Column::make('Points', 'value')
