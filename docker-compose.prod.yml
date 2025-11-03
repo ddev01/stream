@@ -71,7 +71,7 @@ services:
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.path=/up"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.interval=30s"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.timeout=5s"
-        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.scheme=http"
+        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.scheme=https"
 
   postgres:
     image: postgres:16-alpine
@@ -156,8 +156,7 @@ services:
       # Change the keys below to your own keys 
       AUTHORIZED_KEYS: >
         "# Start Keys
-         ssh-ed25519 1234567890abcdefghijklmnoqrstuvwxyz user-a
-         ssh-ed25519 abcdefghijklmnoqrstuvwxyz1234567890 user-b
+         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPifqshxdjUmSi8eBV0QfrVw2871N+uhMdra2koE2bDK macbook
          # End Keys"
       # You can lock to a specific IP too (AllowUsers tunnel@1.2.3.4)
       ALLOWED_IPS: "AllowUsers tunnel"
