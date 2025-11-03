@@ -26,7 +26,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel.rule=HostRegexp(`localhost`)"
+      - "traefik.http.routers.laravel.rule=Host(`localhost`) || HostRegexp(`.*\\.ngrok-free\\.dev`)"
       - "traefik.http.routers.laravel.entrypoints=web"
       - "traefik.http.services.laravel.loadbalancer.server.port=8080"
       - "traefik.http.services.laravel.loadbalancer.server.scheme=http"
