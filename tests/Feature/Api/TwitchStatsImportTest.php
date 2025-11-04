@@ -32,14 +32,14 @@ test('can bulk import twitch stats', function () {
 
     $stats = [
         [
-            'userId' => '112699727',
+            'userId' => '002345711',
             'platform' => 'twitch',
             'name' => 'points',
             'value' => 3000,
             'lastWrite' => '2025-10-21T18:30:44.8350000Z',
         ],
         [
-            'userId' => '112699727',
+            'userId' => '002345711',
             'platform' => 'twitch',
             'name' => 'watchtime',
             'value' => 1314780,
@@ -71,7 +71,7 @@ test('can bulk import twitch stats', function () {
     expect(TwitchUser::count())->toBe(2)
         ->and(TwitchUserStat::count())->toBe(3);
 
-    $twitchUser = TwitchUser::where('twitch_id', '112699727')->first();
+    $twitchUser = TwitchUser::where('twitch_id', '002345711')->first();
     expect($twitchUser)->not->toBeNull();
     expect($twitchUser->stats()->count())->toBe(2);
 
@@ -82,7 +82,7 @@ test('can bulk import twitch stats', function () {
 test('can update existing stats', function () {
     $auth = createAuthenticatedUser();
 
-    $twitchUser = TwitchUser::factory()->create(['twitch_id' => '112699727']);
+    $twitchUser = TwitchUser::factory()->create(['twitch_id' => '002345711']);
     TwitchUserStat::factory()->create([
         'twitch_user_id' => $twitchUser->id,
         'name' => 'points',
@@ -91,7 +91,7 @@ test('can update existing stats', function () {
 
     $stats = [
         [
-            'userId' => '112699727',
+            'userId' => '002345711',
             'platform' => 'twitch',
             'name' => 'points',
             'value' => 5000,
@@ -151,7 +151,7 @@ test('validates required fields for stats import', function () {
 
     $stats = [
         [
-            'userId' => '112699727',
+            'userId' => '002345711',
             // Missing 'name' and 'value'
         ],
     ];
@@ -169,7 +169,7 @@ test('handles json values in stats', function () {
 
     $stats = [
         [
-            'userId' => '112699727',
+            'userId' => '002345711',
             'platform' => 'twitch',
             'name' => 'complexData',
             'value' => ['nested' => 'data', 'count' => 42],
@@ -186,7 +186,7 @@ test('handles json values in stats', function () {
     // Process the queued job
     Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
-    $twitchUser = TwitchUser::where('twitch_id', '112699727')->first();
+    $twitchUser = TwitchUser::where('twitch_id', '002345711')->first();
     $stat = $twitchUser->stats()->where('name', 'complexData')->first();
 
     $decoded = json_decode($stat->value, true);

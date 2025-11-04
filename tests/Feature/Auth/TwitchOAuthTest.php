@@ -13,14 +13,14 @@ uses(RefreshDatabase::class);
 
 test('twitch oauth creates user and links twitch user', function () {
     $socialiteUser = Mockery::mock(SocialiteUser::class);
-    $socialiteUser->shouldReceive('getId')->andReturn('112699727');
-    $socialiteUser->id = '112699727';
-    $socialiteUser->nickname = 'mychoppaeats';
-    $socialiteUser->name = 'mychoppaeats';
+    $socialiteUser->shouldReceive('getId')->andReturn('002345711');
+    $socialiteUser->id = '002345711';
+    $socialiteUser->nickname = 'mytestuser';
+    $socialiteUser->name = 'mytestuser';
     $socialiteUser->email = 'test@example.com';
     $socialiteUser->avatar = 'https://example.com/avatar.png';
     $socialiteUser->user = [
-        'display_name' => 'mychoppaeats',
+        'display_name' => 'mytestuser',
         'profile_image_url' => 'https://example.com/avatar.png',
         'broadcaster_type' => 'affiliate',
         'created_at' => '2016-01-14T08:51:48Z',
@@ -39,8 +39,8 @@ test('twitch oauth creates user and links twitch user', function () {
     $user = User::first();
     $twitchUser = TwitchUser::first();
 
-    expect($user->name)->toBe('mychoppaeats')
-        ->and($twitchUser->twitch_id)->toBe('112699727')
+    expect($user->name)->toBe('mytestuser')
+        ->and($twitchUser->twitch_id)->toBe('002345711')
         ->and($twitchUser->user_id)->toBe($user->id)
         ->and($twitchUser->profile_image_url)->toBe('https://example.com/avatar.png')
         ->and($twitchUser->broadcaster_type)->toBe('affiliate');
@@ -49,8 +49,8 @@ test('twitch oauth creates user and links twitch user', function () {
 test('twitch oauth enriches existing twitch user with stats', function () {
     // Create a Twitch user with stats (from C# import)
     $twitchUser = TwitchUser::factory()->create([
-        'twitch_id' => '112699727',
-        'display_name' => 'mychoppaeats',
+        'twitch_id' => '002345711',
+        'display_name' => 'mytestuser',
         'profile_image_url' => null,
         'user_id' => null,
     ]);
@@ -68,14 +68,14 @@ test('twitch oauth enriches existing twitch user with stats', function () {
     ]);
 
     $socialiteUser = Mockery::mock(SocialiteUser::class);
-    $socialiteUser->shouldReceive('getId')->andReturn('112699727');
-    $socialiteUser->id = '112699727';
-    $socialiteUser->nickname = 'mychoppaeats';
-    $socialiteUser->name = 'mychoppaeats';
+    $socialiteUser->shouldReceive('getId')->andReturn('002345711');
+    $socialiteUser->id = '002345711';
+    $socialiteUser->nickname = 'mytestuser';
+    $socialiteUser->name = 'mytestuser';
     $socialiteUser->email = 'test@example.com';
     $socialiteUser->avatar = 'https://example.com/avatar.png';
     $socialiteUser->user = [
-        'display_name' => 'mychoppaeats',
+        'display_name' => 'mytestuser',
         'profile_image_url' => 'https://example.com/avatar.png',
         'broadcaster_type' => 'partner',
         'created_at' => '2016-01-14T08:51:48Z',
@@ -104,7 +104,7 @@ test('twitch oauth enriches existing twitch user with stats', function () {
 
 test('user can access stats through relationship', function () {
     $twitchUser = TwitchUser::factory()->create([
-        'twitch_id' => '112699727',
+        'twitch_id' => '002345711',
     ]);
 
     $user = User::factory()->create();
@@ -137,20 +137,20 @@ test('twitch oauth links to existing user through twitch user', function () {
     ]);
 
     $existingTwitchUser = TwitchUser::factory()->create([
-        'twitch_id' => '112699727',
+        'twitch_id' => '002345711',
         'user_id' => $existingUser->id,
         'display_name' => 'OldName',
     ]);
 
     $socialiteUser = Mockery::mock(SocialiteUser::class);
-    $socialiteUser->shouldReceive('getId')->andReturn('112699727');
-    $socialiteUser->id = '112699727';
-    $socialiteUser->nickname = 'mychoppaeats';
-    $socialiteUser->name = 'mychoppaeats';
+    $socialiteUser->shouldReceive('getId')->andReturn('002345711');
+    $socialiteUser->id = '002345711';
+    $socialiteUser->nickname = 'mytestuser';
+    $socialiteUser->name = 'mytestuser';
     $socialiteUser->email = 'test@example.com';
     $socialiteUser->avatar = 'https://example.com/avatar.png';
     $socialiteUser->user = [
-        'display_name' => 'mychoppaeats',
+        'display_name' => 'mytestuser',
         'profile_image_url' => 'https://example.com/avatar.png',
         'broadcaster_type' => 'affiliate',
         'created_at' => '2016-01-14T08:51:48Z',
@@ -168,7 +168,7 @@ test('twitch oauth links to existing user through twitch user', function () {
 
     $twitchUser = TwitchUser::first();
     expect($twitchUser->user_id)->toBe($existingUser->id)
-        ->and($twitchUser->display_name)->toBe('mychoppaeats');
+        ->and($twitchUser->display_name)->toBe('mytestuser');
 });
 
 test('twitch oauth redirect route returns socialite redirect', function () {

@@ -10,20 +10,28 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 test('c# posts stats then user signs in with oauth', function () {
-    // Simulate C# import
+    // Create a User and post stats via API (creates TwitchUser without user_id)
+    $u = User::factory()->create(['name' => 'Alpha User']);
+    $token = $u->createToken('test')->plainTextToken;
+
     $stats = [
         ['userId' => '10', 'userName' => 'alpha', 'platform' => 'twitch', 'name' => 'points', 'value' => 77, 'lastWrite' => now()->toISOString()],
     ];
-    $u = User::factory()->create(['name' => 'Alpha User']);
-    $token = $u->createToken('test')->plainTextToken;
     $this->postJson('/api/twitch/stats', ['stats' => $stats], ['Authorization' => 'Bearer '.$token]);
 
     expect(TwitchUser::where('twitch_id', '10')->exists())->toBeTrue();
-    // Now, sign in with OAuth (mock Socialite)
+    $twitchUser = TwitchUser::where('twitch_id', '10')->first();
+    expect($twitchUser->user_id)->toBeNull(); // TwitchUser created without user_id
+
+    // Now, sign in with OAuth while authenticated as the same User
+    // This should link the existing TwitchUser to the authenticated User
+    $this->actingAs($u);
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('10', 'alpha', 'alpha@x.com'));
     $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
     $tw = TwitchUser::where('twitch_id', '10')->first();
     expect($tw->display_name)->toBe('alpha')->and($tw->user_id)->toBe($u->id);
+    // Should still have 1 User (the same one)
+    expect(User::count())->toBe(1);
 });
 
 test('user signs in then c# posts stats', function () {
