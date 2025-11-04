@@ -35,14 +35,26 @@ class TwitchAuthService
 
         // Find or create the Laravel User based on the linked TwitchUser
         if ($twitchUser->user_id) {
+            // TwitchUser already linked to a User
             $user = User::find($twitchUser->user_id);
         } else {
-            // Create a new User and link it to the TwitchUser
-            $user = User::create([
-                'name' => $this->getDisplayName($twitchOAuthUser),
-            ]);
-            $twitchUser->user_id = $user->id;
-            $twitchUser->save();
+            // Check if there's an authenticated User who should be linked
+            // (e.g., User posted stats via API, creating this TwitchUser)
+            $authenticatedUser = auth()->user();
+
+            if ($authenticatedUser && ! $authenticatedUser->twitchUser) {
+                // Link the TwitchUser to the authenticated User
+                $twitchUser->user_id = $authenticatedUser->id;
+                $twitchUser->save();
+                $user = $authenticatedUser;
+            } else {
+                // Create a new User and link it to the TwitchUser
+                $user = User::create([
+                    'name' => $this->getDisplayName($twitchOAuthUser),
+                ]);
+                $twitchUser->user_id = $user->id;
+                $twitchUser->save();
+            }
         }
 
         return $user;
