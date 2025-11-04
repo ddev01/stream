@@ -25,7 +25,7 @@ test('callback creates new user and twitch user', function () {
     $socialiteUser = mockSocialiteUser('1', 'alpha', 'alpha@example.com');
     Socialite::shouldReceive('driver->user')->andReturn($socialiteUser);
     $resp = $this->get('/auth/twitch/callback');
-    $resp->assertRedirect('/dashboard');
+    $resp->assertRedirect('/home');
     expect(User::count())->toBe(1)->and(TwitchUser::count())->toBe(1);
     $user = User::first();
     $tw = TwitchUser::first();
@@ -39,7 +39,7 @@ test('callback enriches existing twitch user', function () {
     $socialiteUser->user['profile_image_url'] = 'http://x.com/p.png';
     Socialite::shouldReceive('driver->user')->andReturn($socialiteUser);
     $resp = $this->get('/auth/twitch/callback');
-    $resp->assertRedirect('/dashboard');
+    $resp->assertRedirect('/home');
     $tw->refresh();
     expect($tw->profile_image_url)->toBe('http://x.com/p.png');
 });
@@ -53,7 +53,7 @@ test('callback links existing user through twitch user', function () {
     ]);
     $socialiteUser = mockSocialiteUser('99', 'zzz', 'test@example.com');
     Socialite::shouldReceive('driver->user')->andReturn($socialiteUser);
-    $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
+    $this->get('/auth/twitch/callback')->assertRedirect('/home');
     $tw = TwitchUser::where('twitch_id', '99')->first();
     expect($tw->user_id)->toBe($user->id)
         ->and($tw->display_name)->toBe('zzz');

@@ -31,7 +31,7 @@ test('twitch oauth creates user and links twitch user', function () {
 
     $response = $this->get('/auth/twitch/callback');
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/home');
 
     expect(User::count())->toBe(1)
         ->and(TwitchUser::count())->toBe(1);
@@ -86,7 +86,7 @@ test('twitch oauth enriches existing twitch user with stats', function () {
 
     $response = $this->get('/auth/twitch/callback');
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/home');
 
     // Should still have 1 TwitchUser (enriched, not duplicated)
     expect(TwitchUser::count())->toBe(1)
@@ -161,7 +161,7 @@ test('twitch oauth links to existing user through twitch user', function () {
 
     $response = $this->get('/auth/twitch/callback');
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/home');
 
     // Should not create a new user
     expect(User::count())->toBe(1);
