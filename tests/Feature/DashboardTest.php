@@ -10,15 +10,15 @@ test('login page can be rendered', function () {
     $response->assertSee('Sign in with Twitch');
 });
 
-test('guests are redirected to login', function () {
-    $response = $this->get(route('dashboard'));
-    $response->assertRedirect('/login');
+test('guests can visit the home page', function () {
+    $response = $this->get(route('home'));
+    $response->assertStatus(200);
 });
 
-test('authenticated users can visit the dashboard', function () {
+test('authenticated users can visit the home', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(route('dashboard'));
+    $response = $this->get(route('home'));
     $response->assertStatus(200);
 });
