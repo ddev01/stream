@@ -12,6 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            // Drop the unique index first (SQLite requirement)
+            $table->dropUnique(['email']);
+        });
+
+        // Drop columns in a separate call for SQLite compatibility
+        Schema::table('users', function (Blueprint $table) {
             $table->dropColumn(['email', 'email_verified_at']);
         });
     }
