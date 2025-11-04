@@ -1,5 +1,4 @@
 services:
-
   traefik:
     ports:
       - target: 80
@@ -11,7 +10,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-        - web-public
+      - web-public
     deploy:
       update_config:
         parallelism: 1
@@ -72,6 +71,36 @@ services:
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.interval=30s"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.timeout=5s"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.scheme=https"
+
+        # Horizon subdomain with IP whitelist
+        - "traefik.http.routers.horizon.rule=Host(`horizon.${SPIN_APP_DOMAIN}`)"
+        - "traefik.http.routers.horizon.entrypoints=websecure"
+        - "traefik.http.routers.horizon.tls=true"
+        - "traefik.http.routers.horizon.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.horizon.middlewares=horizon-ipwhitelist"
+        - "traefik.http.services.horizon.loadbalancer.server.port=8443"
+        - "traefik.http.services.horizon.loadbalancer.server.scheme=https"
+
+        # Telescope subdomain with IP whitelist
+        - "traefik.http.routers.telescope.rule=Host(`telescope.${SPIN_APP_DOMAIN}`)"
+        - "traefik.http.routers.telescope.entrypoints=websecure"
+        - "traefik.http.routers.telescope.tls=true"
+        - "traefik.http.routers.telescope.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.telescope.middlewares=telescope-ipwhitelist"
+        - "traefik.http.services.telescope.loadbalancer.server.port=8443"
+        - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
+
+        # IP Whitelist middleware for Horizon
+        # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
+        - "traefik.http.middlewares.horizon-ipwhitelist.ipwhitelist.sourcerange=${HORIZON_ALLOWED_IPS}"
+
+        # IP Whitelist middleware for Telescope
+        # Reads from TELESCOPE_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
+        - "traefik.http.middlewares.telescope-ipwhitelist.ipwhitelist.sourcerange=${TELESCOPE_ALLOWED_IPS}"
 
   postgres:
     image: postgres:16-alpine
@@ -144,7 +173,7 @@ services:
         window: 120s
 
   ssh:
-    # We use an SSH image so we can securely tunnel into the Docker network with 
+    # We use an SSH image so we can securely tunnel into the Docker network with
     # tools like Sequel Pro, TablePlus, Sequel Ace, etc.
     # Learn more how to secure your tunnel here: https://github.com/serversideup/docker-ssh
     image: serversideup/docker-ssh:v2.0.0
@@ -153,7 +182,7 @@ services:
         published: 2222
         mode: host
     environment:
-      # Change the keys below to your own keys 
+      # Change the keys below to your own keys
       AUTHORIZED_KEYS: >
         "# Start Keys
          ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPifqshxdjUmSi8eBV0QfrVw2871N+uhMdra2koE2bDK macbook
