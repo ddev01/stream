@@ -31,20 +31,19 @@ class TwitchAuthService
             'broadcaster_type' => $twitchOAuthUser->user['broadcaster_type'] ?? null,
             'twitch_created_at' => $twitchOAuthUser->user['created_at'] ?? null,
             'description' => $twitchOAuthUser->user['description'] ?? null,
-            'email' => $twitchOAuthUser->email,
         ]);
 
-        // Find or create the Laravel User
-        $user = User::firstOrCreate(
-            ['email' => $twitchOAuthUser->email],
-            [
+        // Find or create the Laravel User based on the linked TwitchUser
+        if ($twitchUser->user_id) {
+            $user = User::find($twitchUser->user_id);
+        } else {
+            // Create a new User and link it to the TwitchUser
+            $user = User::create([
                 'name' => $this->getDisplayName($twitchOAuthUser),
-            ]
-        );
-
-        // Link TwitchUser to User
-        $twitchUser->user_id = $user->id;
-        $twitchUser->save();
+            ]);
+            $twitchUser->user_id = $user->id;
+            $twitchUser->save();
+        }
 
         return $user;
     }
