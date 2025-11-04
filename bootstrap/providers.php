@@ -7,7 +7,7 @@ $providers = [
     \SocialiteProviders\Manager\ServiceProvider::class,
 ];
 
-// Only register Telescope if it's installed (dev dependency)
+// Register Telescope if it's installed
 if (class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
     $providers[] = App\Providers\TelescopeServiceProvider::class;
 }
