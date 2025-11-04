@@ -56,11 +56,23 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewTelescope', function ($user) {
-            // Allow access based on user ID or other criteria
-            // Add specific user IDs here if needed
-            return in_array($user->id, [
-                //
-            ]);
+            // Allow all in local environment
+            if (app()->environment('local')) {
+                return true;
+            }
+
+            // Must have linked TwitchUser
+            $twitchUser = $user->twitchUser ?? null;
+            if (! $twitchUser) {
+                return false;
+            }
+
+            // Check if Twitch ID is in admin list
+            $adminTwitchIds = array_filter(
+                explode(',', env('ADMIN_TWITCH_IDS', ''))
+            );
+
+            return in_array($twitchUser->twitch_id, $adminTwitchIds);
         });
     }
 }

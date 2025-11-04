@@ -28,11 +28,28 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', function ($user = null) {
-            // Allow access based on user ID or other criteria
-            // Add specific user IDs here if needed
-            return in_array(optional($user)->id, [
-                //
-            ]);
+            // Allow all in local environment
+            if (app()->environment('local')) {
+                return true;
+            }
+
+            // Must be authenticated
+            if (! $user) {
+                return false;
+            }
+
+            // Must have linked TwitchUser
+            $twitchUser = $user->twitchUser;
+            if (! $twitchUser) {
+                return false;
+            }
+
+            // Check if Twitch ID is in admin list
+            $adminTwitchIds = array_filter(
+                explode(',', env('ADMIN_TWITCH_IDS', ''))
+            );
+
+            return in_array($twitchUser->twitch_id, $adminTwitchIds);
         });
     }
 }
