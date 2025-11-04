@@ -44,7 +44,6 @@ test('creates new user and twitch user', function () {
     $user = $service->handleOAuthCallback($socialiteUser);
 
     expect($user)->toBeInstanceOf(User::class)
-        ->and($user->email)->toBe('test@example.com')
         ->and($user->name)->toBe('TestUser');
 
     expect(TwitchUser::count())->toBe(1);
@@ -81,16 +80,21 @@ test('enriches existing twitch user', function () {
         ->and($twitchUser->broadcaster_type)->toBe('affiliate');
 });
 
-test('links to existing user by email', function () {
+test('links to existing user through twitch user', function () {
     $service = app(TwitchAuthService::class);
 
-    // Create existing User
+    // Create existing User and TwitchUser already linked
     $existingUser = User::factory()->create([
-        'email' => 'existing@example.com',
         'name' => 'Existing User',
     ]);
 
-    $socialiteUser = createMockSocialiteUser('789', 'existing@example.com', 'TwitchName');
+    $existingTwitchUser = TwitchUser::factory()->create([
+        'twitch_id' => '789',
+        'user_id' => $existingUser->id,
+        'display_name' => 'OldName',
+    ]);
+
+    $socialiteUser = createMockSocialiteUser('789', 'test@example.com', 'TwitchName');
 
     $user = $service->handleOAuthCallback($socialiteUser);
 
@@ -98,7 +102,8 @@ test('links to existing user by email', function () {
     expect(User::count())->toBe(1); // No duplicate
 
     $twitchUser = TwitchUser::first();
-    expect($twitchUser->user_id)->toBe($existingUser->id);
+    expect($twitchUser->user_id)->toBe($existingUser->id)
+        ->and($twitchUser->display_name)->toBe('TwitchName');
 });
 
 test('preserves existing stats when enriching', function () {

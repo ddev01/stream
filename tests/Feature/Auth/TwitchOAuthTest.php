@@ -39,7 +39,7 @@ test('twitch oauth creates user and links twitch user', function () {
     $user = User::first();
     $twitchUser = TwitchUser::first();
 
-    expect($user->email)->toBe('test@example.com')
+    expect($user->name)->toBe('mychoppaeats')
         ->and($twitchUser->twitch_id)->toBe('112699727')
         ->and($twitchUser->user_id)->toBe($user->id)
         ->and($twitchUser->profile_image_url)->toBe('https://example.com/avatar.png')
@@ -130,11 +130,16 @@ test('user can access stats through relationship', function () {
         ->and($user->stat('nonexistent'))->toBeNull();
 });
 
-test('twitch oauth handles existing user with same email', function () {
-    // User already exists with this email
+test('twitch oauth links to existing user through twitch user', function () {
+    // User and TwitchUser already exist and are linked
     $existingUser = User::factory()->create([
-        'email' => 'test@example.com',
         'name' => 'Existing User',
+    ]);
+
+    $existingTwitchUser = TwitchUser::factory()->create([
+        'twitch_id' => '112699727',
+        'user_id' => $existingUser->id,
+        'display_name' => 'OldName',
     ]);
 
     $socialiteUser = Mockery::mock(SocialiteUser::class);
@@ -162,7 +167,8 @@ test('twitch oauth handles existing user with same email', function () {
     expect(User::count())->toBe(1);
 
     $twitchUser = TwitchUser::first();
-    expect($twitchUser->user_id)->toBe($existingUser->id);
+    expect($twitchUser->user_id)->toBe($existingUser->id)
+        ->and($twitchUser->display_name)->toBe('mychoppaeats');
 });
 
 test('twitch oauth redirect route returns socialite redirect', function () {

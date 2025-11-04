@@ -14,7 +14,7 @@ test('c# posts stats then user signs in with oauth', function () {
     $stats = [
         ['userId' => '10', 'userName' => 'alpha', 'platform' => 'twitch', 'name' => 'points', 'value' => 77, 'lastWrite' => now()->toISOString()],
     ];
-    $u = User::factory()->create(['email' => 'alpha@x.com']);
+    $u = User::factory()->create(['name' => 'Alpha User']);
     $token = $u->createToken('test')->plainTextToken;
     $this->postJson('/api/twitch/stats', ['stats' => $stats], ['Authorization' => 'Bearer '.$token]);
 
@@ -27,7 +27,7 @@ test('c# posts stats then user signs in with oauth', function () {
 });
 
 test('user signs in then c# posts stats', function () {
-    $u = User::factory()->create(['email' => 'beta@x.com']);
+    $u = User::factory()->create(['name' => 'Beta User']);
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('20', 'beta', 'beta@x.com'));
     $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
     $token = $u->createToken('test')->plainTextToken;
@@ -53,7 +53,7 @@ test('multiple oauth sign ins dont duplicate data', function () {
     $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
     $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
     expect(TwitchUser::where('twitch_id', '66')->count())->toBe(1);
-    expect(User::where('email', 'multi@x.com')->count())->toBe(1);
+    expect(User::where('name', 'multi')->count())->toBe(1);
 });
 
 function test_socialite_user($id, $display, $email)

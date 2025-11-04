@@ -29,7 +29,7 @@ test('callback creates new user and twitch user', function () {
     expect(User::count())->toBe(1)->and(TwitchUser::count())->toBe(1);
     $user = User::first();
     $tw = TwitchUser::first();
-    expect($user->email)->toBe('alpha@example.com')
+    expect($user->name)->toBe('alpha')
         ->and($tw->user_id)->toBe($user->id);
 });
 
@@ -44,13 +44,19 @@ test('callback enriches existing twitch user', function () {
     expect($tw->profile_image_url)->toBe('http://x.com/p.png');
 });
 
-test('callback links existing user by email', function () {
-    $user = User::factory()->create(['email' => 'x@z.com']);
-    $socialiteUser = mockSocialiteUser('99', 'zzz', 'x@z.com');
+test('callback links existing user through twitch user', function () {
+    $user = User::factory()->create(['name' => 'Existing User']);
+    $existingTwitchUser = TwitchUser::factory()->create([
+        'twitch_id' => '99',
+        'user_id' => $user->id,
+        'display_name' => 'OldName',
+    ]);
+    $socialiteUser = mockSocialiteUser('99', 'zzz', 'test@example.com');
     Socialite::shouldReceive('driver->user')->andReturn($socialiteUser);
     $this->get('/auth/twitch/callback')->assertRedirect('/dashboard');
     $tw = TwitchUser::where('twitch_id', '99')->first();
-    expect($tw->user_id)->toBe($user->id);
+    expect($tw->user_id)->toBe($user->id)
+        ->and($tw->display_name)->toBe('zzz');
 });
 
 test('callback handles socialite exception gracefully', function () {

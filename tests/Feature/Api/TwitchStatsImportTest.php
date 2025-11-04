@@ -16,7 +16,6 @@ function createAuthenticatedUser(): array
 {
     $user = User::factory()->create([
         'name' => 'Test API User',
-        'email' => 'api@test.local',
         'password' => Hash::make('password'),
     ]);
 

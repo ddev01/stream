@@ -32,7 +32,6 @@ test('twitch stats endpoint accepts valid token', function () {
     // Create a user and generate a token
     $user = User::factory()->create([
         'name' => 'Test API User',
-        'email' => 'api@test.local',
         'password' => Hash::make('password'),
     ]);
 
@@ -108,7 +107,6 @@ test('twitch stats endpoint rejects expired token', function () {
     // Create a user and generate a token
     $user = User::factory()->create([
         'name' => 'Test API User',
-        'email' => 'api@test.local',
         'password' => Hash::make('password'),
     ]);
 
@@ -141,7 +139,7 @@ test('twitch stats endpoint rejects expired token', function () {
 test('twitch stats endpoint works with api user token', function () {
     // Create the API user (same as in seeder)
     $apiUser = User::firstOrCreate(
-        ['email' => 'api@streamerbot.local'],
+        ['name' => 'Development API User'],
         [
             'name' => 'StreamerBot API User',
             'password' => Hash::make('password'),
