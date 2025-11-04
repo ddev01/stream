@@ -29,9 +29,8 @@ class DevelopmentApiAuth
         if ($devApiKey && $token === $devApiKey) {
             // For development, create a temporary user or use a system user
             $user = \App\Models\User::firstOrCreate(
-                ['email' => 'dev@streamerbot.local'],
+                ['name' => 'Development API User'],
                 [
-                    'name' => 'Development API User',
                     'password' => bcrypt(uniqid()),
                 ]
             );
