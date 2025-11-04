@@ -11,20 +11,17 @@ test('profile page is displayed', function () {
     $this->get(route('profile.edit'))->assertOk();
 });
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+test('profile information is read-only', function () {
+    $user = User::factory()->create(['name' => 'Original Name']);
 
     $this->actingAs($user);
 
-    $response = Volt::test('settings.profile')
-        ->set('name', 'Test User')
-        ->call('updateProfileInformation');
+    $response = $this->get(route('profile.edit'));
 
-    $response->assertHasNoErrors();
-
-    $user->refresh();
-
-    expect($user->name)->toEqual('Test User');
+    $response->assertOk();
+    $response->assertSee('Original Name');
+    $response->assertSee('managed through your Twitch account');
+    $response->assertSee('cannot be changed here');
 });
 
 test('user can delete their account', function () {
