@@ -93,6 +93,16 @@ services:
         - "traefik.http.services.telescope.loadbalancer.server.port=8443"
         - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
 
+        # Pulse subdomain with IP whitelist
+        - "traefik.http.routers.pulse.rule=Host(`pulse.${SPIN_APP_DOMAIN}`)"
+        - "traefik.http.routers.pulse.entrypoints=websecure"
+        - "traefik.http.routers.pulse.tls=true"
+        - "traefik.http.routers.pulse.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.pulse.middlewares=pulse-ipwhitelist"
+        - "traefik.http.routers.pulse.service=pulse"
+        - "traefik.http.services.pulse.loadbalancer.server.port=8443"
+        - "traefik.http.services.pulse.loadbalancer.server.scheme=https"
+
         # IP Whitelist middleware for Horizon
         # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
         # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
@@ -104,6 +114,12 @@ services:
         # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
         # Note: /32 means a single IP address (CIDR notation)
         - "traefik.http.middlewares.telescope-ipwhitelist.ipwhitelist.sourcerange=${TELESCOPE_ALLOWED_IPS}"
+
+        # IP Whitelist middleware for Pulse
+        # Reads from PULSE_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
+        - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
 
   postgres:
     image: postgres:16-alpine
@@ -153,6 +169,37 @@ services:
     environment:
       APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
       PHP_OPCACHE_ENABLE: "1"
+    networks:
+      - web-public
+    volumes:
+      - "storage_private:/var/www/html/storage/app/private/"
+      - "storage_public:/var/www/html/storage/app/public/"
+      - "storage_sessions:/var/www/html/storage/framework/sessions"
+      - "storage_logs:/var/www/html/storage/logs"
+    deploy:
+      update_config:
+        failure_action: rollback
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+
+  pulse:
+    image: ${SPIN_IMAGE_DOCKERFILE}
+    command: ["php", "/var/www/html/artisan", "pulse:check"]
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    environment:
+      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
+      PHP_OPCACHE_ENABLE: "1"
+      PULSE_SERVER_NAME: "${PULSE_SERVER_NAME:-ubuntu-cx23-2c-2gb-fsn1}"
     networks:
       - web-public
     volumes:
