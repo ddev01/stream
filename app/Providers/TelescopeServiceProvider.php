@@ -55,24 +55,51 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
+        Gate::define('viewTelescope', function ($user = null) {
             // Allow all in local environment
             if (app()->environment('local')) {
                 return true;
             }
 
+            // Must be authenticated
+            if (! $user) {
+                \Log::warning('Telescope gate: User not authenticated', [
+                    'session_id' => session()->getId(),
+                    'auth_check' => auth()->check(),
+                ]);
+                return false;
+            }
+
             // Must have linked TwitchUser
             $twitchUser = $user->twitchUser ?? null;
             if (! $twitchUser) {
+                \Log::warning('Telescope gate: User has no TwitchUser', [
+                    'user_id' => $user->id,
+                ]);
                 return false;
             }
 
             // Check if Twitch ID is in admin list
-            $adminTwitchIds = array_filter(
-                explode(',', env('ADMIN_TWITCH_IDS', ''))
+            // Convert to string and trim whitespace for proper comparison
+            $adminTwitchIds = array_map(
+                fn ($id) => trim((string) $id),
+                array_filter(
+                    explode(',', env('ADMIN_TWITCH_IDS', ''))
+                )
             );
 
-            return in_array($twitchUser->twitch_id, $adminTwitchIds);
+            $userTwitchId = (string) $twitchUser->twitch_id;
+            $isAuthorized = in_array($userTwitchId, $adminTwitchIds, true);
+
+            if (! $isAuthorized) {
+                \Log::warning('Telescope gate: User Twitch ID not in admin list', [
+                    'user_id' => $user->id,
+                    'twitch_id' => $userTwitchId,
+                    'admin_ids' => $adminTwitchIds,
+                ]);
+            }
+
+            return $isAuthorized;
         });
     }
 }
