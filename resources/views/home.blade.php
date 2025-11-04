@@ -1,8 +1,8 @@
-<x-layouts.app :title="__('Dashboard')">
+<x-layouts.app :title="__('Home')">
 	<div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
 		<div class="grid auto-rows-min gap-4 md:grid-cols-3">
 			<!-- Points Leaderboard -->
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4  dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
 				<h2 class="mb-4 text-lg font-semibold">Top 5 Points</h2>
 				<ol class="space-y-2">
 					@foreach ($topPoints as $stat)
@@ -32,7 +32,7 @@
 			</div>
 
 			<!-- Watchtime Leaderboard -->
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4  dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
 				<h2 class="mb-4 text-lg font-semibold">Top 5 Watchtime</h2>
 				<ol class="space-y-2">
 					@foreach ($topWatchtime as $stat)
@@ -62,7 +62,7 @@
 			</div>
 
 			<!-- Top Three Count Leaderboard -->
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4  dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
 				<h2 class="mb-4 text-lg font-semibold">Top 5 Top Three</h2>
 				<ol class="space-y-2">
 					@foreach ($topTopThree as $stat)

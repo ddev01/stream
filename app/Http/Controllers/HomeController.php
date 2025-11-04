@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TwitchUserStat;
 use Illuminate\Support\Facades\Auth;
 
-class DashboardController extends Controller
+class HomeController extends Controller
 {
     public function index()
     {
@@ -83,7 +83,7 @@ class DashboardController extends Controller
             }
         }
 
-        return view('dashboard', [
+        return view('home', [
             'topPoints' => $topPoints,
             'topWatchtime' => $topWatchtime,
             'topTopThree' => $topTopThree,
