@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+$horizonDomain = env('HORIZON_DOMAIN');
+
 return [
 
     /*
@@ -28,7 +30,7 @@ return [
     |
     */
 
-    'domain' => env('HORIZON_DOMAIN'),
+    'domain' => $horizonDomain,
 
     /*
     |--------------------------------------------------------------------------
@@ -39,9 +41,12 @@ return [
     | to change this path to anything you like. Note that the URI will not
     | affect the paths of its internal API that aren't exposed to users.
     |
+    | When using a subdomain (domain is set), the path should be empty so
+    | that Horizon is accessible at the root of the subdomain.
+    |
     */
 
-    'path' => env('HORIZON_PATH', 'horizon'),
+    'path' => env('HORIZON_PATH', $horizonDomain !== null ? '' : 'horizon'),
 
     /*
     |--------------------------------------------------------------------------

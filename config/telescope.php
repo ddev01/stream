@@ -3,6 +3,8 @@
 use Laravel\Telescope\Http\Middleware\Authorize;
 use Laravel\Telescope\Watchers;
 
+$telescopeDomain = env('TELESCOPE_DOMAIN');
+
 return [
 
     /*
@@ -29,7 +31,7 @@ return [
     |
     */
 
-    'domain' => env('TELESCOPE_DOMAIN'),
+    'domain' => $telescopeDomain,
 
     /*
     |--------------------------------------------------------------------------
@@ -40,9 +42,12 @@ return [
     | to change this path to anything you like. Note that the URI will not
     | affect the paths of its internal API that aren't exposed to users.
     |
+    | When using a subdomain (domain is set), the path should be empty so
+    | that Telescope is accessible at the root of the subdomain.
+    |
     */
 
-    'path' => env('TELESCOPE_PATH', 'telescope'),
+    'path' => env('TELESCOPE_PATH', $telescopeDomain !== null ? '' : 'telescope'),
 
     /*
     |--------------------------------------------------------------------------
