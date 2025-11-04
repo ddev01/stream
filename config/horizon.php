@@ -126,7 +126,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Silencing a job will instruct Horizon to not place the job in the list
-    | of completed jobs within the Horizon dashboard. This setting may be
+    | of completed jobs within the Horizon home. This setting may be
     | used to fully remove any noisy jobs from the completed jobs list.
     |
     */
