@@ -64,6 +64,7 @@ services:
         - "traefik.http.routers.my-php-app.entrypoints=websecure"
         - "traefik.http.routers.my-php-app.tls=true"
         - "traefik.http.routers.my-php-app.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.my-php-app.service=my-php-app"
         - "traefik.http.services.my-php-app.loadbalancer.server.port=8443"
         - "traefik.http.services.my-php-app.loadbalancer.server.scheme=https"
         # Health check
@@ -78,6 +79,7 @@ services:
         - "traefik.http.routers.horizon.tls=true"
         - "traefik.http.routers.horizon.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.horizon.middlewares=horizon-ipwhitelist"
+        - "traefik.http.routers.horizon.service=horizon"
         - "traefik.http.services.horizon.loadbalancer.server.port=8443"
         - "traefik.http.services.horizon.loadbalancer.server.scheme=https"
 
@@ -87,6 +89,7 @@ services:
         - "traefik.http.routers.telescope.tls=true"
         - "traefik.http.routers.telescope.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.telescope.middlewares=telescope-ipwhitelist"
+        - "traefik.http.routers.telescope.service=telescope"
         - "traefik.http.services.telescope.loadbalancer.server.port=8443"
         - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
 
