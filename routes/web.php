@@ -11,9 +11,7 @@ use Livewire\Volt\Volt;
 Route::get('/auth/twitch', [TwitchAuthController::class, 'redirect']);
 Route::get('/auth/twitch/callback', [TwitchAuthController::class, 'callback']);
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-})->name('home');
+
 
 // Login page - displays Twitch OAuth button
 Route::view('/login', 'livewire.auth.login')->name('login');
@@ -32,7 +30,6 @@ Route::post('/logout', function (Request $request) {
     return redirect('/');
 })->name('logout');
 
-
 Route::get('/leaderboards/points', function () {
     return view('points-leaderboard');
 })->name('leaderboards.points');
@@ -45,7 +42,7 @@ Route::get('/leaderboards/top-three', function () {
     return view('top-three-leaderboard');
 })->name('leaderboards.top-three');
 
-Route::get('dashboard', [DashboardController::class, 'index'])
+Route::get('/', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::get('users/{user}', function (App\Models\User $user) {
