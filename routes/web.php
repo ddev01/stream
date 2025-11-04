@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\TwitchAuthController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -10,8 +10,6 @@ use Livewire\Volt\Volt;
 // Twitch OAuth routes
 Route::get('/auth/twitch', [TwitchAuthController::class, 'redirect']);
 Route::get('/auth/twitch/callback', [TwitchAuthController::class, 'callback']);
-
-
 
 // Login page - displays Twitch OAuth button
 Route::view('/login', 'livewire.auth.login')->name('login');
@@ -42,8 +40,8 @@ Route::get('/leaderboards/top-three', function () {
     return view('top-three-leaderboard');
 })->name('leaderboards.top-three');
 
-Route::get('/', [DashboardController::class, 'index'])
-    ->name('dashboard');
+Route::get('/', [HomeController::class, 'index'])
+    ->name('home');
 
 Route::get('users/{user}', function (App\Models\User $user) {
     return view('users.show', ['user' => $user]);
@@ -53,6 +51,5 @@ Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-    Volt::route('settings/password', 'settings.password')->name('user-password.edit');
     Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
 });

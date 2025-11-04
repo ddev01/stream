@@ -1,57 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 
-new class extends Component {
-    public string $name = '';
-
-    /**
-     * Mount the component.
-     */
-    public function mount(): void
-    {
-        $this->name = Auth::user()->name;
-    }
-
-    /**
-     * Update the profile information for the currently authenticated user.
-     */
-    public function updateProfileInformation(): void
-    {
-        $user = Auth::user();
-
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $user->fill($validated);
-        $user->save();
-
-        $this->dispatch('profile-updated', name: $user->name);
-    }
+new class extends Component
+{
+    // Profile information is read-only since we use OAuth
 }; ?>
 
 <section class="w-full">
-    @include('partials.settings-heading')
+	@include('partials.settings-heading')
 
-    <x-settings.layout :heading="__('Profile')" :subheading="__('Update your name')">
-        <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+	<x-settings.layout :heading="__('Profile')" :subheading="__('Your account information')">
+		<div class="my-6 w-full space-y-6">
+			<div>
+				<flux:field :label="__('Name')">
+					<flux:input type="text" :value="auth()->user()->name" disabled />
+				</flux:field>
+				<flux:description class="mt-2">
+					{{ __('Your name is managed through your Twitch account and cannot be changed here.') }}
+				</flux:description>
+			</div>
+		</div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
-                    </flux:button>
-                </div>
-
-                <x-action-message class="me-3" on="profile-updated">
-                    {{ __('Saved.') }}
-                </x-action-message>
-            </div>
-        </form>
-
-        <livewire:settings.delete-user-form />
-    </x-settings.layout>
+		<livewire:settings.delete-user-form />
+	</x-settings.layout>
 </section>
