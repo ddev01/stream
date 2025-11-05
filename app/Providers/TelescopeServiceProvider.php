@@ -67,6 +67,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                     'session_id' => session()->getId(),
                     'auth_check' => auth()->check(),
                 ]);
+
                 return false;
             }
 
@@ -76,18 +77,12 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 \Log::warning('Telescope gate: User has no TwitchUser', [
                     'user_id' => $user->id,
                 ]);
+
                 return false;
             }
 
             // Check if Twitch ID is in admin list
-            // Convert to string and trim whitespace for proper comparison
-            $adminTwitchIds = array_map(
-                fn ($id) => trim((string) $id),
-                array_filter(
-                    explode(',', env('ADMIN_TWITCH_IDS', ''))
-                )
-            );
-
+            $adminTwitchIds = config('admin.twitch_ids', []);
             $userTwitchId = (string) $twitchUser->twitch_id;
             $isAuthorized = in_array($userTwitchId, $adminTwitchIds, true);
 

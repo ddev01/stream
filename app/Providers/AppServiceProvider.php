@@ -38,27 +38,38 @@ class AppServiceProvider extends ServiceProvider
 
             // Must be authenticated
             if (! $user) {
+                \Log::warning('Pulse gate: User not authenticated', [
+                    'session_id' => session()->getId(),
+                    'auth_check' => auth()->check(),
+                ]);
+
                 return false;
             }
 
             // Must have linked TwitchUser
             $twitchUser = $user->twitchUser ?? null;
             if (! $twitchUser) {
+                \Log::warning('Pulse gate: User has no TwitchUser', [
+                    'user_id' => $user->id,
+                ]);
+
                 return false;
             }
 
             // Check if Twitch ID is in admin list
-            // Convert to string and trim whitespace for proper comparison
-            $adminTwitchIds = array_map(
-                fn ($id) => trim((string) $id),
-                array_filter(
-                    explode(',', env('ADMIN_TWITCH_IDS', ''))
-                )
-            );
-
+            $adminTwitchIds = config('admin.twitch_ids', []);
             $userTwitchId = (string) $twitchUser->twitch_id;
+            $isAuthorized = in_array($userTwitchId, $adminTwitchIds, true);
 
-            return in_array($userTwitchId, $adminTwitchIds, true);
+            if (! $isAuthorized) {
+                \Log::warning('Pulse gate: User Twitch ID not in admin list', [
+                    'user_id' => $user->id,
+                    'twitch_id' => $userTwitchId,
+                    'admin_ids' => $adminTwitchIds,
+                ]);
+            }
+
+            return $isAuthorized;
         });
     }
 }

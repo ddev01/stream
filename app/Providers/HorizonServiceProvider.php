@@ -45,14 +45,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             }
 
             // Check if Twitch ID is in admin list
-            // Convert to string and trim whitespace for proper comparison
-            $adminTwitchIds = array_map(
-                fn ($id) => trim((string) $id),
-                array_filter(
-                    explode(',', env('ADMIN_TWITCH_IDS', ''))
-                )
-            );
-
+            $adminTwitchIds = config('admin.twitch_ids', []);
             $userTwitchId = (string) $twitchUser->twitch_id;
 
             return in_array($userTwitchId, $adminTwitchIds, true);
