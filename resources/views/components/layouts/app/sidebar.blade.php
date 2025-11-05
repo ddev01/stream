@@ -13,16 +13,27 @@
 			<x-app-logo />
 		</a>
 
-		<flux:navlist variant="outline">
-			<flux:navlist.group class="grid" :heading="__('Platform')">
-				<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
-			</flux:navlist.group>
-			<flux:navlist.group class="grid" :heading="__('Leaderboards')">
-				<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points') }}</flux:navlist.item>
-				<flux:navlist.item icon="clock" :href="route('leaderboards.watchtime')" :current="request()->routeIs('leaderboards.watchtime')" wire:navigate>{{ __('Watchtime') }}</flux:navlist.item>
-				<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count') }}</flux:navlist.item>
-			</flux:navlist.group>
-		</flux:navlist>
+		<div class="flex flex-col justify-between gap-2">
+			<flux:navlist variant="outline">
+				<flux:navlist.group class="grid" :heading="__('Platform')">
+					<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
+				</flux:navlist.group>
+				<flux:navlist.group class="grid" :heading="__('Leaderboards')">
+					<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points') }}</flux:navlist.item>
+					<flux:navlist.item icon="clock" :href="route('leaderboards.watchtime')" :current="request()->routeIs('leaderboards.watchtime')" wire:navigate>{{ __('Watchtime') }}</flux:navlist.item>
+					<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count') }}</flux:navlist.item>
+				</flux:navlist.group>
+			</flux:navlist>
+			@if (auth()->user()?->isAdmin())
+			<flux:navlist variant="outline">
+				<flux:navlist.group class="grid" :heading="__('Admin')">
+					<flux:navlist.item icon="chart-bar" href="{{ config('pulse.domain') ? 'https://' . config('pulse.domain') : url('/' . config('pulse.path', 'pulse')) }}" :current="request()->getHost() === config('pulse.domain')">{{ __('Pulse') }}</flux:navlist.item>
+					<flux:navlist.item icon="squares-2x2" href="{{ config('horizon.domain') ? 'https://' . config('horizon.domain') : url('/' . config('horizon.path', 'horizon')) }}" :current="request()->getHost() === config('horizon.domain')">{{ __('Horizon') }}</flux:navlist.item>
+					<flux:navlist.item icon="magnifying-glass" href="{{ config('telescope.domain') ? 'https://' . config('telescope.domain') : url('/' . config('telescope.path', 'telescope')) }}" :current="request()->getHost() === config('telescope.domain')">{{ __('Telescope') }}</flux:navlist.item>
+				</flux:navlist.group>
+			</flux:navlist>
+			@endif
+		</div>
 
 		<flux:spacer />
 
