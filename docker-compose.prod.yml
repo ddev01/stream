@@ -94,14 +94,13 @@ services:
         - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
 
         # Pulse subdomain with IP whitelist
+        # Pulse is a Laravel package, route to main PHP app service
         - "traefik.http.routers.pulse.rule=Host(`pulse.${SPIN_APP_DOMAIN}`)"
         - "traefik.http.routers.pulse.entrypoints=websecure"
         - "traefik.http.routers.pulse.tls=true"
         - "traefik.http.routers.pulse.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.pulse.middlewares=pulse-ipwhitelist"
-        - "traefik.http.routers.pulse.service=pulse"
-        - "traefik.http.services.pulse.loadbalancer.server.port=8443"
-        - "traefik.http.services.pulse.loadbalancer.server.scheme=https"
+        - "traefik.http.routers.pulse.service=my-php-app"
 
         # IP Whitelist middleware for Horizon
         # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
@@ -207,6 +206,14 @@ services:
       - "storage_public:/var/www/html/storage/app/public/"
       - "storage_sessions:/var/www/html/storage/framework/sessions"
       - "storage_logs:/var/www/html/storage/logs"
+    # Override healthcheck: pulse:check is a long-running daemon, not a web server
+    # Use a simple command check that always passes (process is running)
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "pulse:check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       update_config:
         failure_action: rollback
