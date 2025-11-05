@@ -74,4 +74,20 @@ class User extends Authenticatable
     {
         return $this->twitchUser?->getStat($name);
     }
+
+    /**
+     * Check if the user is an admin based on their Twitch ID
+     */
+    public function isAdmin(): bool
+    {
+        $twitchUser = $this->twitchUser;
+        if (! $twitchUser) {
+            return false;
+        }
+
+        $adminTwitchIds = config('admin.twitch_ids', []);
+        $userTwitchId = (string) $twitchUser->twitch_id;
+
+        return in_array($userTwitchId, $adminTwitchIds, true);
+    }
 }
