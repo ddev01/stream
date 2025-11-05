@@ -6,14 +6,14 @@
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
-	<flux:sidebar class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900" sticky stashable>
+	<flux:sidebar class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 h-full" sticky stashable>
 		<flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
 		<a class="me-5 flex items-center space-x-2 rtl:space-x-reverse" href="{{ route('home') }}" wire:navigate>
 			<x-app-logo />
 		</a>
 
-		<div class="flex flex-col justify-between gap-2">
+		<div class="flex flex-col justify-between gap-2 h-full">
 			<flux:navlist variant="outline">
 				<flux:navlist.group class="grid" :heading="__('Platform')">
 					<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
@@ -35,7 +35,7 @@
 			@endif
 		</div>
 
-		<flux:spacer />
+		{{-- <flux:spacer /> --}}
 
 		{{-- <flux:navlist variant="outline">
                 <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
@@ -48,6 +48,7 @@
             </flux:navlist> --}}
 
 		<!-- Desktop User Menu -->
+
 		@auth
 			<flux:dropdown class="hidden lg:block" position="bottom" align="start">
 				<flux:profile data-test="sidebar-menu-button" :name="auth()->user()->name" :initials="auth()->user()->initials()" icon:trailing="chevrons-up-down" />
