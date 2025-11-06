@@ -10,7 +10,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - web-public
+        - web-public
     deploy:
       update_config:
         parallelism: 1
