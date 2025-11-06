@@ -1,27 +1,32 @@
+x-development-network: &development-network
+  - development
+
+x-laravel-dev-volumes: &laravel-dev-volumes
+  - .:/var/www/html/
+
+x-laravel-dev-base: &laravel-dev-base
+  build:
+    target: development
+    args:
+      USER_ID: ${SPIN_USER_ID}
+      GROUP_ID: ${SPIN_GROUP_ID}
+  volumes: *laravel-dev-volumes
+  networks: *development-network
+
 services:
   traefik:
     ports:
       - "80:80"
       - "443:443"
-    networks:
-      development:
+    networks: *development-network
     volumes:
-      # Mount the Docker socket as read-only so Traefik can listen to events
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./.infrastructure/conf/traefik/dev/traefik.yml:/traefik.yml:ro
       - ./.infrastructure/conf/traefik/dev/traefik-certs.yml:/traefik-certs.yml
       - ./.infrastructure/conf/traefik/dev/certificates/:/certificates
 
   php:
-    build:
-      target: development
-      args:
-        USER_ID: ${SPIN_USER_ID}
-        GROUP_ID: ${SPIN_GROUP_ID}
-    volumes:
-      - .:/var/www/html/
-    networks:
-      - development
+    <<: *laravel-dev-base
     depends_on:
       - traefik
     labels:
@@ -33,23 +38,19 @@ services:
 
   node:
     image: node:22
-    volumes:
-      - .:/usr/src/app/
+    volumes: *laravel-dev-volumes
     working_dir: /usr/src/app/
-    networks:
-      - development
+    networks: *development-network
 
   mailpit:
     image: axllent/mailpit
-    networks:
-      - development
+    networks: *development-network
     ports:
       - "8025:8025"
 
   postgres:
     image: postgres:16-alpine
-    networks:
-      - development
+    networks: *development-network
     environment:
       POSTGRES_DB: "${DB_DATABASE:-laravel}"
       POSTGRES_USER: "${DB_USERNAME:-laravel}"
@@ -72,44 +73,29 @@ services:
     command: "redis-server --appendonly yes --requirepass redispassword"
     volumes:
       - ./.infrastructure/volume_data/redis/data:/data
-    networks:
-      - development
+    networks: *development-network
 
   ssh:
-    # We use an SSH image so we can securely tunnel into the Docker network with
-    # tools like Sequel Pro, TablePlus, Sequel Ace, etc.
-    # Learn more how to secure your tunnel here: https://github.com/serversideup/docker-ssh
     image: serversideup/docker-ssh:v2.0.0
     ports:
       - "2222:2222"
     environment:
-      # Change the keys below to your own keys
       AUTHORIZED_KEYS: >
         "# Start Keys
          ssh-ed25519 1234567890abcdefghijklmnoqrstuvwxyz user-a
          ssh-ed25519 abcdefghijklmnoqrstuvwxyz1234567890 user-b
          # End Keys"
-      # You can lock to a specific IP too (AllowUsers tunnel@1.2.3.4)
       ALLOWED_IPS: "AllowUsers tunnel"
     volumes:
       - tunnel_ssh_host_keys_dev:/etc/ssh/ssh_host_keys
-    networks:
-      - development
+    networks: *development-network
     depends_on:
       postgres:
         condition: service_healthy
 
   horizon:
-    build:
-      target: development
-      args:
-        USER_ID: ${SPIN_USER_ID}
-        GROUP_ID: ${SPIN_GROUP_ID}
+    <<: *laravel-dev-base
     command: ["php", "/var/www/html/artisan", "horizon"]
-    volumes:
-      - .:/var/www/html/
-    networks:
-      - development
     depends_on:
       redis:
         condition: service_healthy

@@ -190,9 +190,15 @@ class TwitchStatsService
             }
 
             $value = $statData['value'];
+            // Convert to integer since value column is now bigInteger
             if (is_array($value) || is_object($value)) {
                 $value = json_encode($value);
+                // If it's still not numeric after encoding, skip it
+                if (! is_numeric($value)) {
+                    continue;
+                }
             }
+            $value = (int) $value;
 
             $statsData[] = [
                 'twitch_user_id' => $twitchUserId,

@@ -27,7 +27,7 @@ test('c# posts stats then user signs in with oauth', function () {
     // This should link the existing TwitchUser to the authenticated User
     $this->actingAs($u);
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('10', 'alpha', 'alpha@x.com'));
-    $this->get('/auth/twitch/callback')->assertRedirect('/home');
+    $this->get('/auth/twitch/callback')->assertRedirect('/');
     $tw = TwitchUser::where('twitch_id', '10')->first();
     expect($tw->display_name)->toBe('alpha')->and($tw->user_id)->toBe($u->id);
     // Should still have 1 User (the same one)
@@ -37,29 +37,29 @@ test('c# posts stats then user signs in with oauth', function () {
 test('user signs in then c# posts stats', function () {
     $u = User::factory()->create(['name' => 'Beta User']);
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('20', 'beta', 'beta@x.com'));
-    $this->get('/auth/twitch/callback')->assertRedirect('/home');
+    $this->get('/auth/twitch/callback')->assertRedirect('/');
     $token = $u->createToken('test')->plainTextToken;
     $stats = [
         ['userId' => '20', 'userName' => 'beta', 'platform' => 'twitch', 'name' => 'watchtime', 'value' => 123, 'lastWrite' => now()->toISOString()],
     ];
     $this->postJson('/api/twitch/stats', ['stats' => $stats], ['Authorization' => 'Bearer '.$token]);
     $tw = TwitchUser::where('twitch_id', '20')->first();
-    expect($tw->display_name)->toBe('beta')->and($tw->getStat('watchtime'))->toBe('123');
+    expect($tw->display_name)->toBe('beta')->and($tw->getStat('watchtime'))->toBe(123);
 });
 
 test('stats persist through oauth enrichment', function () {
     $tw = TwitchUser::factory()->create(['twitch_id' => '42']);
     TwitchUserStat::factory()->create(['twitch_user_id' => $tw->id, 'name' => 'x', 'value' => 42]);
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('42', 'gamma', 'g@g.com'));
-    $this->get('/auth/twitch/callback')->assertRedirect('/home');
+    $this->get('/auth/twitch/callback')->assertRedirect('/');
     $tw->refresh();
-    expect($tw->getStat('x'))->toBe('42');
+    expect($tw->getStat('x'))->toBe(42);
 });
 
 test('multiple oauth sign ins dont duplicate data', function () {
     \Laravel\Socialite\Facades\Socialite::shouldReceive('driver->user')->andReturn(test_socialite_user('66', 'multi', 'multi@x.com'));
-    $this->get('/auth/twitch/callback')->assertRedirect('/home');
-    $this->get('/auth/twitch/callback')->assertRedirect('/home');
+    $this->get('/auth/twitch/callback')->assertRedirect('/');
+    $this->get('/auth/twitch/callback')->assertRedirect('/');
     expect(TwitchUser::where('twitch_id', '66')->count())->toBe(1);
     expect(User::where('name', 'multi')->count())->toBe(1);
 });
