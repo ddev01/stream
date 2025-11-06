@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwitchAuthController;
 use App\Http\Controllers\HomeController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -15,37 +17,21 @@ Route::get('/auth/twitch/callback', [TwitchAuthController::class, 'callback']);
 Route::view('/login', 'livewire.auth.login')->name('login');
 
 // Redirect register to login since we only use Twitch OAuth
-Route::get('/register', function () {
-    return redirect('/login');
-});
+Route::get('/register', [RegisterController::class, 'redirect']);
 
 // Logout route
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+Route::post('/logout', [LogoutController::class, 'destroy'])->name('logout');
 
-    return redirect('/');
-})->name('logout');
+// Leaderboard routes
+Route::get('/leaderboards/points', [LeaderboardController::class, 'points'])->name('leaderboards.points');
+Route::get('/leaderboards/watchtime', [LeaderboardController::class, 'watchtime'])->name('leaderboards.watchtime');
+Route::get('/leaderboards/top-three', [LeaderboardController::class, 'topThree'])->name('leaderboards.top-three');
 
-Route::get('/leaderboards/points', function () {
-    return view('points-leaderboard');
-})->name('leaderboards.points');
+// Home route
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/leaderboards/watchtime', function () {
-    return view('watchtime-leaderboard');
-})->name('leaderboards.watchtime');
-
-Route::get('/leaderboards/top-three', function () {
-    return view('top-three-leaderboard');
-})->name('leaderboards.top-three');
-
-Route::get('/', [HomeController::class, 'index'])
-    ->name('home');
-
-Route::get('users/{user}', function (App\Models\User $user) {
-    return view('users.show', ['user' => $user]);
-})->name('users.show');
+// User routes
+Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
