@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('twitch_user_id')->constrained('twitch_users')->cascadeOnDelete();
             $table->string('name');
-            $table->text('value')->nullable();
+            $table->bigInteger('value')->nullable();
             $table->timestamp('last_write')->nullable();
             $table->timestamps();
 
             $table->unique(['twitch_user_id', 'name']);
             $table->index('twitch_user_id');
             $table->index('name');
+            $table->index(['name', 'value']);
         });
     }
 
