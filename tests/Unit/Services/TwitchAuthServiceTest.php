@@ -126,7 +126,7 @@ test('preserves existing stats when enriching', function () {
 
     $twitchUser->refresh();
     expect($twitchUser->stats()->count())->toBe(1);
-    expect($twitchUser->stats()->where('name', 'points')->first()->value)->toBe('5000');
+    expect($twitchUser->stats()->where('name', 'points')->first()->value)->toBe(5000);
 });
 
 test('handles null optional fields', function () {

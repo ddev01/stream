@@ -76,7 +76,7 @@ test('can bulk import twitch stats', function () {
     expect($twitchUser->stats()->count())->toBe(2);
 
     $pointsStat = $twitchUser->stats()->where('name', 'points')->first();
-    expect($pointsStat->value)->toBe('3000');
+    expect($pointsStat->value)->toBe(3000);
 });
 
 test('can update existing stats', function () {
@@ -114,7 +114,7 @@ test('can update existing stats', function () {
     Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     $pointsStat = $twitchUser->stats()->where('name', 'points')->first();
-    expect($pointsStat->value)->toBe('5000');
+    expect($pointsStat->value)->toBe(5000);
 });
 
 test('creates twitch user if not exists when importing stats', function () {
@@ -164,7 +164,7 @@ test('validates required fields for stats import', function () {
         ->assertJsonValidationErrors(['stats.0.name', 'stats.0.value']);
 });
 
-test('handles json values in stats', function () {
+test('handles non-numeric values by skipping them', function () {
     $auth = createAuthenticatedUser();
 
     $stats = [
@@ -187,12 +187,9 @@ test('handles json values in stats', function () {
     Artisan::call('queue:work', ['--once' => true, '--queue' => 'default']);
 
     $twitchUser = TwitchUser::where('twitch_id', '002345711')->first();
+    // Non-numeric values should be skipped, so no stat should be created
     $stat = $twitchUser->stats()->where('name', 'complexData')->first();
-
-    $decoded = json_decode($stat->value, true);
-    expect($decoded)->toBeArray()
-        ->and($decoded['nested'])->toBe('data')
-        ->and($decoded['count'])->toBe(42);
+    expect($stat)->toBeNull();
 });
 
 test('requires stats array', function () {

@@ -25,7 +25,7 @@ test('twitch user has many stats', function () {
 test('getStat returns correct value', function () {
     $tw = TwitchUser::factory()->create();
     TwitchUserStat::factory()->create(['twitch_user_id' => $tw->id, 'name' => 'points', 'value' => 99]);
-    expect($tw->getStat('points'))->toBe('99');
+    expect($tw->getStat('points'))->toBe(99);
 });
 
 test('getStat returns null for nonexistent stat', function () {

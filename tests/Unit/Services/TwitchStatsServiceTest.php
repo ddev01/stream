@@ -68,7 +68,7 @@ test('updates existing stats', function () {
     expect(TwitchUserStat::count())->toBe(1);
 
     $stat = TwitchUserStat::first();
-    expect($stat->value)->toBe('150');
+    expect($stat->value)->toBe(150);
 });
 
 test('handles empty stats array', function () {
@@ -82,7 +82,7 @@ test('handles empty stats array', function () {
         ->and($result['total'])->toBe(0);
 });
 
-test('handles json values', function () {
+test('handles non-numeric values by skipping them', function () {
     $service = app(TwitchStatsService::class);
 
     $stats = [
@@ -98,13 +98,13 @@ test('handles json values', function () {
 
     $result = $service->importStats($stats);
 
-    expect($result['status'])->toBe('success');
+    // Should skip non-numeric values
+    expect($result['status'])->toBe('success')
+        ->and($result['imported'])->toBe(0)
+        ->and($result['updated'])->toBe(0)
+        ->and($result['total'])->toBe(1);
 
-    $stat = TwitchUserStat::first();
-    $decoded = json_decode($stat->value, true);
-    expect($decoded)->toBeArray()
-        ->and($decoded['nested'])->toBe('data')
-        ->and($decoded['count'])->toBe(42);
+    expect(TwitchUserStat::count())->toBe(0);
 });
 
 test('batch imports multiple stats efficiently', function () {
