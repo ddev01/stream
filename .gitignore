@@ -24,3 +24,8 @@ yarn-error.log
 poster.cs.vault-password
 .spin.yml
 /spinned-repos
+**/.DS_Store
+
+
+# C#
+cs/
