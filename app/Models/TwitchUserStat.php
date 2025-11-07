@@ -49,11 +49,11 @@ class TwitchUserStat extends Model
     }
 
     /**
-     * Scope a query to order by value
+     * Scope a query to order by value (numeric sorting)
      */
     public function scopeOrderedByValue(Builder $query, string $direction = 'desc'): Builder
     {
-        return $query->orderBy('value', $direction);
+        return $query->orderByRaw('CAST(value AS INTEGER) '.$direction);
     }
 
     /**
