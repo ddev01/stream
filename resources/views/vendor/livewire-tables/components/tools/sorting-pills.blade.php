@@ -3,7 +3,7 @@
 @if ($isTailwind)
 	<div class="@if($this->sortingPillsAreEnabled() && $this->hasSorts()) mb-4 @endif">
         @if ($this->sortingPillsAreEnabled() && $this->hasSorts())
-			<div class="px-4 md:p-0" x-cloak x-show="!currentlyReorderingStatus">
+			<div x-cloak x-show="!currentlyReorderingStatus">
 				<small class="text-neutral-700 dark:text-zinc-300">{{ __($localisationPath . 'Applied Sorting') }}:</small>
 
 				@foreach ($this->getSorts() as $columnSelectName => $direction)

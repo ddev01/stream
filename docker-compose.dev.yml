@@ -39,7 +39,7 @@ services:
   node:
     image: node:22
     volumes: *laravel-dev-volumes
-    working_dir: /usr/src/app/
+    working_dir: /var/www/html
     networks: *development-network
 
   mailpit:

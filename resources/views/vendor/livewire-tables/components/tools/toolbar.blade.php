@@ -6,7 +6,7 @@
     {{
         $toolBarAttributes->merge()
         ->class([
-            'md:flex md:justify-between mb-4 px-4 md:p-0' => $isTailwind && ($toolBarAttributes['default-styling'] ?? true),
+            'md:flex md:justify-between mb-4 md:px-4 md:p-0' => $isTailwind && ($toolBarAttributes['default-styling'] ?? true),
             'd-md-flex justify-content-between mb-3' => $isBootstrap && ($toolBarAttributes['default-styling'] ?? true),
         ])
         ->except(['default','default-styling','default-colors'])
