@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\TwitchUser;
 use App\Services\TwitchAuthService;
 use App\Services\TwitchStatsService;
 use Illuminate\Support\Facades\Event;
@@ -71,5 +72,25 @@ class AppServiceProvider extends ServiceProvider
 
             return $isAuthorized;
         });
+
+        // Ensure fake Laravel user exists for system operations
+        $this->ensureFakeLaravelUser();
+    }
+
+    /**
+     * Ensure the fake Laravel user exists in twitch_users table
+     * This runs on every application boot to guarantee the user exists
+     */
+    private function ensureFakeLaravelUser(): void
+    {
+        try {
+            TwitchUser::firstOrCreate(
+                ['twitch_id' => '0'],
+                ['display_name' => 'fake_laravel_user']
+            );
+        } catch (\Exception $e) {
+            // Silently fail if table doesn't exist yet (during migrations)
+            // or if there's any other issue
+        }
     }
 }
