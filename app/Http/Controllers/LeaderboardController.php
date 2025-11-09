@@ -30,4 +30,12 @@ class LeaderboardController extends Controller
     {
         return view('top-three-leaderboard');
     }
+
+    /**
+     * Display the gifted subscriptions leaderboard
+     */
+    public function giftedSubscriptions(): \Illuminate\View\View
+    {
+        return view('gifted-subscriptions-leaderboard');
+    }
 }

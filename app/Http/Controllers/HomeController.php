@@ -16,29 +16,35 @@ class HomeController extends Controller
         $topPoints = $leaderboardService->getTopStats('points');
         $topWatchtime = $leaderboardService->getTopStats('watchtime');
         $topTopThree = $leaderboardService->getTopStats('topThreeCount');
+        $topGifters = $leaderboardService->getTopGifters(5);
 
         // Get authenticated user's stats and positions if logged in
         $userPointsData = null;
         $userWatchtimeData = null;
         $userTopThreeData = null;
+        $userGifterData = null;
 
         if (Auth::check()) {
             $user = Auth::user();
             $userPointsData = $leaderboardService->getUserStatAndPosition($user, 'points');
             $userWatchtimeData = $leaderboardService->getUserStatAndPosition($user, 'watchtime');
             $userTopThreeData = $leaderboardService->getUserStatAndPosition($user, 'topThreeCount');
+            $userGifterData = $leaderboardService->getUserGifterStatAndPosition($user);
         }
 
         return view('home', [
             'topPoints' => $topPoints,
             'topWatchtime' => $topWatchtime,
             'topTopThree' => $topTopThree,
+            'topGifters' => $topGifters,
             'userStats' => $userPointsData['stat'] ?? null,
             'userPosition' => $userPointsData['position'] ?? null,
             'userWatchtimeStats' => $userWatchtimeData['stat'] ?? null,
             'userWatchtimePosition' => $userWatchtimeData['position'] ?? null,
             'userTopThreeStats' => $userTopThreeData['stat'] ?? null,
             'userTopThreePosition' => $userTopThreeData['position'] ?? null,
+            'userGifterStats' => $userGifterData['stat'] ?? null,
+            'userGifterPosition' => $userGifterData['position'] ?? null,
         ]);
     }
 }
