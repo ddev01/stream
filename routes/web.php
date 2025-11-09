@@ -26,6 +26,7 @@ Route::post('/logout', [LogoutController::class, 'destroy'])->name('logout');
 Route::get('/leaderboards/points', [LeaderboardController::class, 'points'])->name('leaderboards.points');
 Route::get('/leaderboards/watchtime', [LeaderboardController::class, 'watchtime'])->name('leaderboards.watchtime');
 Route::get('/leaderboards/top-three', [LeaderboardController::class, 'topThree'])->name('leaderboards.top-three');
+Route::get('/leaderboards/gifted-subscriptions', [LeaderboardController::class, 'giftedSubscriptions'])->name('leaderboards.gifted-subscriptions');
 
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');
