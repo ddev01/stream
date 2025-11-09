@@ -34,30 +34,47 @@ class SubscriptionHistoryService
         DB::beginTransaction();
 
         try {
-            // Step 1: Get all unique user IDs from raw data (before processing)
+            // Step 1: Get all unique user IDs from raw data and normalize them
+            // We normalize first, then query database with ONLY normalized IDs
             $userIds = [];
             foreach ($subscriptionHistory as $sub) {
                 if (isset($sub['userId'])) {
-                    $userIds[] = $sub['userId'];
+                    $normalized = $this->normalizeUserId($sub['userId']);
+                    if ($normalized) {
+                        $userIds[] = $normalized;
+                    }
                 }
                 if (isset($sub['gifterUserId'])) {
-                    $userIds[] = $sub['gifterUserId'];
+                    $normalized = $this->normalizeUserId($sub['gifterUserId']);
+                    if ($normalized) {
+                        $userIds[] = $normalized;
+                    }
                 }
             }
             $userIds = array_unique($userIds);
+            $userIds = array_values($userIds);
 
             // Step 2: Verify all user_ids exist in twitch_users (single query)
+            if (empty($userIds)) {
+                return [
+                    'status' => 'success',
+                    'message' => 'No user IDs found in subscription history',
+                    'imported' => 0,
+                    'updated' => 0,
+                    'total' => count($subscriptionHistory),
+                    'valid' => 0,
+                ];
+            }
+
+            // Query database with normalized string IDs
             $existingUsers = TwitchUser::whereIn('twitch_id', $userIds)
                 ->pluck('twitch_id')
                 ->toArray();
-            $missingUsers = array_diff($userIds, $existingUsers);
 
-            if (! empty($missingUsers)) {
-                Log::warning('Subscription history import: Some users do not exist', [
-                    'missing_users' => $missingUsers,
-                    'total_missing' => count($missingUsers),
-                ]);
-            }
+            // Add dummy user "0" for missing users
+            $existingUsers[] = '0';
+            $existingUsers = array_unique($existingUsers);
+            $existingUsers = array_values($existingUsers);
 
             // Step 3: Extract and prepare subscription history data (with user verification)
             $subscriptionData = $this->prepareSubscriptionData($subscriptionHistory, $existingUsers);
@@ -66,8 +83,8 @@ class SubscriptionHistoryService
                 DB::rollBack();
 
                 return [
-                    'status' => 'success',
-                    'message' => 'No valid subscription history to import',
+                    'status' => 'warning',
+                    'message' => 'No valid subscription history to import - all records were filtered out',
                     'imported' => 0,
                     'updated' => 0,
                     'total' => count($subscriptionHistory),
@@ -104,16 +121,11 @@ class SubscriptionHistoryService
 
             DB::commit();
 
-            Log::info('Subscription history import completed', [
-                'imported' => $imported,
-                'updated' => $updated,
-                'total' => count($subscriptionHistory),
-                'valid' => count($subscriptionData),
-            ]);
-
             return [
-                'status' => 'success',
-                'message' => 'Subscription history imported successfully',
+                'status' => ($imported > 0 || $updated > 0) ? 'success' : 'warning',
+                'message' => ($imported > 0 || $updated > 0)
+                    ? 'Subscription history imported successfully'
+                    : 'Subscription history import completed but no records were imported or updated',
                 'imported' => $imported,
                 'updated' => $updated,
                 'total' => count($subscriptionHistory),
@@ -134,7 +146,6 @@ class SubscriptionHistoryService
 
     /**
      * Prepare subscription history data from raw API payload
-     * Filters out records with invalid or missing users during preparation
      */
     private function prepareSubscriptionData(array $subscriptionHistory, array $existingUsers): array
     {
@@ -157,33 +168,32 @@ class SubscriptionHistoryService
             try {
                 $subscribedAtDate = Carbon::parse($subscribedAt);
             } catch (\Exception $e) {
-                Log::warning('Invalid date format in subscription', [
-                    'oid' => $oid,
-                    'subscribedAt' => $subscribedAt,
-                ]);
-
                 continue;
             }
 
-            // Extract user_id and gifter_user_id
-            $userId = $sub['userId'] ?? null;
-            if (! $userId) {
-                continue;
+            // Extract user_id and gifter_user_id (normalize for comparison)
+            $userId = isset($sub['userId']) ? $this->normalizeUserId($sub['userId']) : null;
+
+            // Use dummy user "0" if userId is missing or null
+            if (! $userId || $userId === '') {
+                $userId = '0';
             }
 
-            // Verify user exists before processing
-            if (! in_array($userId, $existingUsers)) {
-                continue;
+            // Use dummy user "0" if user doesn't exist
+            if (! in_array($userId, $existingUsers, true)) {
+                $userId = '0';
             }
 
-            $gifterUserId = $sub['gifterUserId'] ?? null;
-            if (! $gifterUserId) {
-                continue;
+            $gifterUserId = isset($sub['gifterUserId']) ? $this->normalizeUserId($sub['gifterUserId']) : null;
+
+            // Use dummy user "0" if gifterUserId is missing or null
+            if (! $gifterUserId || $gifterUserId === '') {
+                $gifterUserId = '0';
             }
 
-            // Verify gifter exists
-            if (! in_array($gifterUserId, $existingUsers)) {
-                continue;
+            // Use dummy user "0" if gifter doesn't exist
+            if (! in_array($gifterUserId, $existingUsers, true)) {
+                $gifterUserId = '0';
             }
 
             $subscriptionData[] = [
@@ -197,5 +207,54 @@ class SubscriptionHistoryService
         }
 
         return $subscriptionData;
+    }
+
+    /**
+     * Normalize user ID to a plain string for consistent comparison
+     * Converts any type (int, string, JSON-encoded) to a plain string
+     */
+    private function normalizeUserId(mixed $userId): ?string
+    {
+        if ($userId === null) {
+            return null;
+        }
+
+        // Convert to string
+        $normalized = is_string($userId) ? $userId : (string) $userId;
+        $normalized = trim($normalized);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        // Keep decoding JSON until we can't decode anymore
+        $maxIterations = 10;
+        $iterations = 0;
+
+        while ($iterations < $maxIterations) {
+            // Try to JSON decode
+            $decoded = json_decode($normalized, true);
+
+            // If decode was successful and returned something different, use it
+            if (json_last_error() === JSON_ERROR_NONE && $decoded !== null) {
+                $decodedString = is_string($decoded) ? $decoded : (string) $decoded;
+                $decodedString = trim($decodedString);
+
+                // If decoded value is the same as the original (after trimming), we're done (prevents infinite loop)
+                if ($decodedString === $normalized) {
+                    break;
+                }
+
+                $normalized = $decodedString;
+                $iterations++;
+
+                continue;
+            }
+
+            // If we can't decode anymore, we're done
+            break;
+        }
+
+        return $normalized === '' ? null : $normalized;
     }
 }
