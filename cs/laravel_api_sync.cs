@@ -22,7 +22,8 @@ public class CPHInline
         "watchtime",
         "lurkCount",
         "lurkTime",
-        "topThreeCount"
+        "topThreeCount",
+		"triviaWins",
     };
     // ===== HTTP CLIENT =====
     private static readonly HttpClient _httpClient = new HttpClient
@@ -451,7 +452,6 @@ public class CPHInline
         // Skip records with missing required fields
         if (string.IsNullOrEmpty(oid) || string.IsNullOrEmpty(subscribedAtDate) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(gifterUserId))
         {
-            WriteLog("WARN", $"Skipping record with missing required fields: oid={oid}, userId={userId}, gifterUserId={gifterUserId}");
             return null;
         }
 
