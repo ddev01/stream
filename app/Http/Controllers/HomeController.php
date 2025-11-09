@@ -17,12 +17,14 @@ class HomeController extends Controller
         $topWatchtime = $leaderboardService->getTopStats('watchtime');
         $topTopThree = $leaderboardService->getTopStats('topThreeCount');
         $topGifters = $leaderboardService->getTopGifters(5);
+        $topTriviaWins = $leaderboardService->getTopStats('triviaWins');
 
         // Get authenticated user's stats and positions if logged in
         $userPointsData = null;
         $userWatchtimeData = null;
         $userTopThreeData = null;
         $userGifterData = null;
+        $userTriviaWinsData = null;
 
         if (Auth::check()) {
             $user = Auth::user();
@@ -30,6 +32,7 @@ class HomeController extends Controller
             $userWatchtimeData = $leaderboardService->getUserStatAndPosition($user, 'watchtime');
             $userTopThreeData = $leaderboardService->getUserStatAndPosition($user, 'topThreeCount');
             $userGifterData = $leaderboardService->getUserGifterStatAndPosition($user);
+            $userTriviaWinsData = $leaderboardService->getUserStatAndPosition($user, 'triviaWins');
         }
 
         return view('home', [
@@ -37,6 +40,7 @@ class HomeController extends Controller
             'topWatchtime' => $topWatchtime,
             'topTopThree' => $topTopThree,
             'topGifters' => $topGifters,
+            'topTriviaWins' => $topTriviaWins,
             'userStats' => $userPointsData['stat'] ?? null,
             'userPosition' => $userPointsData['position'] ?? null,
             'userWatchtimeStats' => $userWatchtimeData['stat'] ?? null,
@@ -45,6 +49,8 @@ class HomeController extends Controller
             'userTopThreePosition' => $userTopThreeData['position'] ?? null,
             'userGifterStats' => $userGifterData['stat'] ?? null,
             'userGifterPosition' => $userGifterData['position'] ?? null,
+            'userTriviaWinsStats' => $userTriviaWinsData['stat'] ?? null,
+            'userTriviaWinsPosition' => $userTriviaWinsData['position'] ?? null,
         ]);
     }
 }

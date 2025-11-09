@@ -16,9 +16,8 @@
 
 			<x-leaderboard-card title="Top 5 Gifted Subs" :top-stats="$topGifters" :user-stat="$userGifterStats" :user-position="$userGifterPosition" />
 
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 max-md:hidden dark:border-neutral-700">
-				<x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-			</div>
+			<x-leaderboard-card title="Top 5 Trivia Wins" :top-stats="$topTriviaWins" :user-stat="$userTriviaWinsStats" :user-position="$userTriviaWinsPosition" />
+
 			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 max-md:hidden dark:border-neutral-700">
 				<x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
 			</div>
