@@ -10,7 +10,7 @@
     <h2 class="mb-4 text-lg font-semibold">{{ $title }}</h2>
     <ol class="space-y-2">
         @foreach ($topStats as $stat)
-            <li class="flex items-center justify-between">
+            <li class="flex items-center justify-between gap-4">
                 <span class="flex items-center gap-2">
                     <strong class="text-sm font-medium">{{ $loop->iteration }}.</strong>
                     <span class="text-sm">{{ $stat->twitchUser->display_name ?? $stat->twitch_user_id }}</span>

@@ -16,15 +16,15 @@
 
 			<x-leaderboard-card title="Top 5 Gifted Subs" :top-stats="$topGifters" :user-stat="$userGifterStats" :user-position="$userGifterPosition" />
 
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 max-md:hidden dark:border-neutral-700">
 				<x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
 			</div>
-			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 max-md:hidden dark:border-neutral-700">
 				<x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
 			</div>
 		</div>
 		<div class="grid h-full gap-4 md:grid-cols-3">
-<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+			<div class="relative overflow-hidden rounded-xl border border-neutral-200 p-4 max-md:hidden dark:border-neutral-700">
 				<x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
 			</div>
 			<div class="relative col-span-2 flex h-full min-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-neutral-200 p-4 md:min-h-[400px] dark:border-neutral-700">

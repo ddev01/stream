@@ -5,7 +5,7 @@
 			<div>
 				<span class="rounded-md shadow-sm">
 					<button type="button" aria-haspopup="true" aria-expanded="true" x-on:click="open = !open" {{ $attributes->merge($this->getColumnSelectButtonAttributes())->class([
-					        'inline-flex justify-between px-4 py-2 w-full text-sm font-medium rounded-md shadow-sm focus:ring focus:ring-opacity-50 relative' => $this->getColumnSelectButtonAttributes()['default-styling'],
+					        'inline-flex justify-between px-4 pr-10 py-2 w-full text-sm font-medium rounded-md shadow-sm focus:ring focus:ring-opacity-50 relative' => $this->getColumnSelectButtonAttributes()['default-styling'],
 					        'text-neutral-700 bg-white hover:bg-neutral-50 focus:ring-neutral-400 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800' => $this->getColumnSelectButtonAttributes()['default-colors'],
 					    ])->except(['default-styling', 'default-colors']) }} x-bind:aria-expanded="open">
 						<span>{{ __($localisationPath . 'Columns') }}</span>
