@@ -38,4 +38,12 @@ class LeaderboardController extends Controller
     {
         return view('gifted-subscriptions-leaderboard');
     }
+
+    /**
+     * Display the trivia wins leaderboard
+     */
+    public function triviaWins(): \Illuminate\View\View
+    {
+        return view('trivia-wins-leaderboard');
+    }
 }
