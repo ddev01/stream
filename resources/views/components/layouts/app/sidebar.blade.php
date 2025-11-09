@@ -31,6 +31,7 @@
 						<flux:navlist.item href="{{ config('pulse.domain') ? 'https://' . config('pulse.domain') : url('/' . config('pulse.path', 'pulse')) }}" icon="chart-bar" :current="request()->getHost() === config('pulse.domain')">{{ __('Pulse') }}</flux:navlist.item>
 						<flux:navlist.item href="{{ config('horizon.domain') ? 'https://' . config('horizon.domain') : url('/' . config('horizon.path', 'horizon')) }}" icon="squares-2x2" :current="request()->getHost() === config('horizon.domain')">{{ __('Horizon') }}</flux:navlist.item>
 						<flux:navlist.item href="{{ config('telescope.domain') ? 'https://' . config('telescope.domain') : url('/' . config('telescope.path', 'telescope')) }}" icon="magnifying-glass" :current="request()->getHost() === config('telescope.domain')">{{ __('Telescope') }}</flux:navlist.item>
+						<flux:navlist.item href="https://v-a9.sentry.io/issues/" icon="exclamation-triangle" target="_blank">{{ __('Sentry') }}</flux:navlist.item>
 					</flux:navlist.group>
 				</flux:navlist>
 			@endif
@@ -127,6 +128,7 @@
 							<flux:menu.item href="{{ config('pulse.domain') ? 'https://' . config('pulse.domain') : url('/' . config('pulse.path', 'pulse')) }}" icon="chart-bar">{{ __('Pulse') }}</flux:menu.item>
 							<flux:menu.item href="{{ config('horizon.domain') ? 'https://' . config('horizon.domain') : url('/' . config('horizon.path', 'horizon')) }}" icon="squares-2x2">{{ __('Horizon') }}</flux:menu.item>
 							<flux:menu.item href="{{ config('telescope.domain') ? 'https://' . config('telescope.domain') : url('/' . config('telescope.path', 'telescope')) }}" icon="magnifying-glass">{{ __('Telescope') }}</flux:menu.item>
+							<flux:menu.item href="https://v-a9.sentry.io/issues/" icon="exclamation-triangle" target="_blank">{{ __('Sentry') }}</flux:menu.item>
 						@endif
 					</flux:menu.radio.group>
 
