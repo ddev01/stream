@@ -51,6 +51,13 @@ abstract class BaseLeaderboardTable extends DataTableComponent
             ->forStat($this->getStatName())
             ->with(['twitchUser.user']);
 
+        // If there's a search term, add the join early so it's available for count queries
+        // The searchable callback will add the WHERE clause, but we need the join in the base query
+        if ($this->hasSearch() && ! empty($this->getSearch())) {
+            $query->join('twitch_users', 'twitch_user_stats.twitch_user_id', '=', 'twitch_users.id')
+                ->select('twitch_user_stats.*');
+        }
+
         // Apply default numeric sort if no user sort is active
         if (! $this->hasSorts()) {
             $query->orderedByValue('desc');
@@ -98,9 +105,14 @@ abstract class BaseLeaderboardTable extends DataTableComponent
             ->sortable(function (Builder $query, string $direction) {
                 // Join for sorting, but keep eager loading to avoid N+1 queries
                 // Eloquent will still eager load relationships after the join
-                return $query->join('twitch_users', 'twitch_user_stats.twitch_user_id', '=', 'twitch_users.id')
-                    ->orderByRaw('LOWER(twitch_users.display_name) '.$direction)
-                    ->select('twitch_user_stats.*')
+                // Only add join if it's not already present
+                $joins = $query->getQuery()->joins ?? [];
+                if (empty($joins)) {
+                    $query->join('twitch_users', 'twitch_user_stats.twitch_user_id', '=', 'twitch_users.id')
+                        ->select('twitch_user_stats.*');
+                }
+
+                return $query->orderByRaw('LOWER(twitch_users.display_name) '.$direction)
                     ->with(['twitchUser.user']);
             })
             ->searchable(function (Builder $query, $searchTerm) {
@@ -109,9 +121,14 @@ abstract class BaseLeaderboardTable extends DataTableComponent
                 $dbDriver = $query->getConnection()->getDriverName();
                 $operator = $dbDriver === 'pgsql' ? 'ilike' : 'like';
 
-                return $query->join('twitch_users', 'twitch_user_stats.twitch_user_id', '=', 'twitch_users.id')
-                    ->where('twitch_users.display_name', $operator, "%{$searchTerm}%")
-                    ->select('twitch_user_stats.*')
+                // Only add join if it's not already present (builder() may have added it)
+                $joins = $query->getQuery()->joins ?? [];
+                if (empty($joins)) {
+                    $query->join('twitch_users', 'twitch_user_stats.twitch_user_id', '=', 'twitch_users.id')
+                        ->select('twitch_user_stats.*');
+                }
+
+                return $query->where('twitch_users.display_name', $operator, "%{$searchTerm}%")
                     ->with(['twitchUser.user']);
             });
     }
@@ -124,7 +141,8 @@ abstract class BaseLeaderboardTable extends DataTableComponent
         return Column::make($this->getValueColumnTitle(), 'value')
             ->sortable(function (Builder $query, string $direction) {
                 // Cast to numeric for proper sorting (column may be TEXT in database)
-                if (! $query->getQuery()->joins) {
+                $joins = $query->getQuery()->joins ?? [];
+                if (empty($joins)) {
                     return $query->orderByRaw('CAST(value AS INTEGER) '.$direction);
                 }
 
