@@ -6,14 +6,14 @@
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
-	<flux:sidebar class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 h-full" sticky stashable>
+	<flux:sidebar class="h-full border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900" sticky stashable>
 		<flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
 		<a class="me-5 flex items-center space-x-2 rtl:space-x-reverse" href="{{ route('home') }}" wire:navigate>
 			<x-app-logo />
 		</a>
 
-		<div class="flex flex-col justify-between gap-2 h-full">
+		<div class="flex h-full flex-col justify-between gap-2">
 			<flux:navlist variant="outline">
 				<flux:navlist.group class="grid" :heading="__('Platform')">
 					<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
@@ -23,6 +23,7 @@
 					<flux:navlist.item icon="clock" :href="route('leaderboards.watchtime')" :current="request()->routeIs('leaderboards.watchtime')" wire:navigate>{{ __('Watchtime') }}</flux:navlist.item>
 					<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count') }}</flux:navlist.item>
 					<flux:navlist.item icon="gift" :href="route('leaderboards.gifted-subscriptions')" :current="request()->routeIs('leaderboards.gifted-subscriptions')" wire:navigate>{{ __('Gifted Subscriptions') }}</flux:navlist.item>
+					<flux:navlist.item icon="academic-cap" :href="route('leaderboards.trivia-wins')" :current="request()->routeIs('leaderboards.trivia-wins')" wire:navigate>{{ __('Trivia Wins') }}</flux:navlist.item>
 				</flux:navlist.group>
 			</flux:navlist>
 			@if (auth()->user()?->isAdmin())
