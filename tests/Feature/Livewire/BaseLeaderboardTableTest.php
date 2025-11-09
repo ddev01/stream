@@ -94,8 +94,17 @@ test('leaderboard table supports search', function () {
     TwitchUserStat::factory()->create(['twitch_user_id' => $twitchUser2->id, 'name' => 'points', 'value' => 200]);
     TwitchUserStat::factory()->create(['twitch_user_id' => $twitchUser3->id, 'name' => 'points', 'value' => 300]);
 
-    // Search functionality is tested via the table rendering
+    // Test search functionality - should filter results and not cause SQL errors
     Livewire::test(PointsLeaderboardTable::class)
+        ->set('search', 'Alpha')
+        ->assertSee('AlphaUser')
+        ->assertDontSee('BetaUser')
+        ->assertDontSee('GammaUser')
+        ->set('search', 'Beta')
+        ->assertSee('BetaUser')
+        ->assertDontSee('AlphaUser')
+        ->assertDontSee('GammaUser')
+        ->set('search', '')
         ->assertSee('AlphaUser')
         ->assertSee('BetaUser')
         ->assertSee('GammaUser');
