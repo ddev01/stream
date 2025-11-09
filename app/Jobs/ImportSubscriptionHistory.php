@@ -56,12 +56,24 @@ class ImportSubscriptionHistory implements ShouldQueue
 
             $duration = (microtime(true) - $startTime) * 1000;
 
-            Log::info('Subscription history import job completed', [
-                'records' => count($this->subscriptionHistory),
-                'imported' => $result['imported'],
-                'updated' => $result['updated'],
-                'duration_ms' => round($duration, 2),
-            ]);
+            // Log warning if nothing was imported/updated, otherwise log as info
+            if ($result['imported'] === 0 && $result['updated'] === 0) {
+                Log::warning('Subscription history import job completed with no changes', [
+                    'records' => count($this->subscriptionHistory),
+                    'imported' => $result['imported'],
+                    'updated' => $result['updated'],
+                    'valid' => $result['valid'] ?? 0,
+                    'duration_ms' => round($duration, 2),
+                    'status' => $result['status'] ?? 'unknown',
+                ]);
+            } else {
+                Log::info('Subscription history import job completed', [
+                    'records' => count($this->subscriptionHistory),
+                    'imported' => $result['imported'],
+                    'updated' => $result['updated'],
+                    'duration_ms' => round($duration, 2),
+                ]);
+            }
         } catch (\Exception $e) {
             $duration = (microtime(true) - $startTime) * 1000;
 
