@@ -22,6 +22,7 @@
 					<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points') }}</flux:navlist.item>
 					<flux:navlist.item icon="clock" :href="route('leaderboards.watchtime')" :current="request()->routeIs('leaderboards.watchtime')" wire:navigate>{{ __('Watchtime') }}</flux:navlist.item>
 					<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count') }}</flux:navlist.item>
+					<flux:navlist.item icon="gift" :href="route('leaderboards.gifted-subscriptions')" :current="request()->routeIs('leaderboards.gifted-subscriptions')" wire:navigate>{{ __('Gifted Subscriptions') }}</flux:navlist.item>
 				</flux:navlist.group>
 			</flux:navlist>
 			@if (auth()->user()?->isAdmin())
