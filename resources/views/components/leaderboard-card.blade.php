@@ -40,10 +40,12 @@
                 @php
                     $username = $stat->twitchUser->display_name ?? $stat->twitch_user_id;
                     $twitchUrl = $isRaiderCard ? 'https://www.twitch.tv/'.strtolower($username) : null;
+                    // Use position calculated from full database (sequential, no ties)
+                    $position = $stat->position ?? $loop->iteration;
                 @endphp
                 <li class="group flex items-center justify-between border-b border-neutral-100 pb-3 last:border-0 last:pb-0 dark:border-neutral-800">
                     <span class="flex items-center gap-3">
-                        <span class="text-xs font-semibold tabular-nums text-neutral-400 dark:text-neutral-500">{{ $loop->iteration }}.</span>
+                        <span class="text-xs font-semibold tabular-nums text-neutral-400 dark:text-neutral-500">{{ $position }}.</span>
                         @if ($isRaiderCard && $twitchUrl)
                             <a href="{{ $twitchUrl }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100">
                                 <span>{{ $username }}</span>
