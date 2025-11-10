@@ -7,6 +7,7 @@ use App\Models\SubscriptionHistory;
 use App\Models\TwitchUserStat;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Service for handling leaderboard queries and user stat retrieval
@@ -18,32 +19,82 @@ class LeaderboardService
      */
     public function getTopStats(string $statName, int $limit = 5): Collection
     {
-        $topStats = TwitchUserStat::with('twitchUser')
-            ->forStat($statName)
-            ->orderedByValue('desc')
-            ->orderBy('id', 'asc') // Tie-breaker: lower ID appears first
-            ->limit($limit)
-            ->get();
+        // Use window function to calculate positions efficiently in a single query
+        // This avoids N+1 queries by calculating all positions at once
+        $connection = DB::connection();
+        $statsTable = $connection->getTablePrefix().'twitch_user_stats';
+        $usersTable = $connection->getTablePrefix().'twitch_users';
+        $statNameEscaped = $connection->getPdo()->quote($statName);
 
-        // Calculate sequential position for each stat (no ties - each gets unique position)
-        // Use value DESC, then id ASC as tie-breaker for consistent ordering
-        return $topStats->map(function ($stat) use ($statName) {
-            // Count users with higher value OR same value but lower ID (appears first in sort)
-            $position = TwitchUserStat::forStat($statName)
-                ->where(function ($query) use ($stat) {
-                    $query->whereRaw('CAST(value AS INTEGER) > ?', [$stat->value])
-                        ->orWhere(function ($q) use ($stat) {
-                            $q->whereRaw('CAST(value AS INTEGER) = ?', [$stat->value])
-                                ->where('id', '<', $stat->id);
-                        });
-                })
-                ->count() + 1;
+        $results = $connection->select("
+            SELECT 
+                ranked_stats.*,
+                twitch_users.id as twitch_user_table_id,
+                twitch_users.twitch_id,
+                twitch_users.user_id,
+                twitch_users.display_name,
+                twitch_users.profile_image_url,
+                twitch_users.broadcaster_type,
+                twitch_users.description,
+                twitch_users.twitch_created_at,
+                twitch_users.email,
+                twitch_users.created_at as twitch_user_created_at,
+                twitch_users.updated_at as twitch_user_updated_at
+            FROM (
+                SELECT 
+                    twitch_user_stats.*,
+                    ROW_NUMBER() OVER (
+                        ORDER BY 
+                            CAST(value AS INTEGER) DESC,
+                            id ASC
+                    ) as position
+                FROM {$statsTable}
+                WHERE name = {$statNameEscaped}
+            ) as ranked_stats
+            INNER JOIN {$usersTable} ON ranked_stats.twitch_user_id = twitch_users.id
+            ORDER BY ranked_stats.position
+            LIMIT ?
+        ", [$limit]);
 
-            // Add position as an attribute
-            $stat->position = $position;
+        // Convert results to models with relationships
+        $topStats = collect($results)->map(function ($row) {
+            // Create stat model from row data (exclude twitch_users columns)
+            $statData = [
+                'id' => $row->id,
+                'twitch_user_id' => $row->twitch_user_id,
+                'name' => $row->name,
+                'value' => $row->value,
+                'last_write' => $row->last_write,
+            ];
+            $stat = new TwitchUserStat($statData);
+            $stat->exists = true;
+            $stat->syncOriginal();
+
+            // Create TwitchUser model from row data
+            $userData = [
+                'id' => $row->twitch_user_table_id,
+                'twitch_id' => $row->twitch_id,
+                'user_id' => $row->user_id,
+                'display_name' => $row->display_name,
+                'profile_image_url' => $row->profile_image_url,
+                'broadcaster_type' => $row->broadcaster_type,
+                'description' => $row->description,
+                'twitch_created_at' => $row->twitch_created_at,
+                'email' => $row->email,
+                'created_at' => $row->twitch_user_created_at,
+                'updated_at' => $row->twitch_user_updated_at,
+            ];
+            $twitchUser = new \App\Models\TwitchUser($userData);
+            $twitchUser->exists = true;
+            $twitchUser->syncOriginal();
+
+            $stat->setRelation('twitchUser', $twitchUser);
+            $stat->position = (int) $row->position;
 
             return $stat;
         });
+
+        return $topStats;
     }
 
     /**
