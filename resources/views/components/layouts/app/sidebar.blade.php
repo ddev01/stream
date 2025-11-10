@@ -24,6 +24,7 @@
 					<flux:navlist.item icon="trophy" :href="route('leaderboards.top-three')" :current="request()->routeIs('leaderboards.top-three')" wire:navigate>{{ __('Top Three Count') }}</flux:navlist.item>
 					<flux:navlist.item icon="gift" :href="route('leaderboards.gifted-subscriptions')" :current="request()->routeIs('leaderboards.gifted-subscriptions')" wire:navigate>{{ __('Gifted Subscriptions') }}</flux:navlist.item>
 					<flux:navlist.item icon="academic-cap" :href="route('leaderboards.trivia-wins')" :current="request()->routeIs('leaderboards.trivia-wins')" wire:navigate>{{ __('Trivia Wins') }}</flux:navlist.item>
+					<flux:navlist.item icon="fire" :href="route('leaderboards.raiders')" :current="request()->routeIs('leaderboards.raiders')" wire:navigate>{{ __('Raiders') }}</flux:navlist.item>
 				</flux:navlist.group>
 			</flux:navlist>
 			@if (auth()->user()?->isAdmin())

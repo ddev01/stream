@@ -28,6 +28,7 @@ Route::get('/leaderboards/watchtime', [LeaderboardController::class, 'watchtime'
 Route::get('/leaderboards/top-three', [LeaderboardController::class, 'topThree'])->name('leaderboards.top-three');
 Route::get('/leaderboards/gifted-subscriptions', [LeaderboardController::class, 'giftedSubscriptions'])->name('leaderboards.gifted-subscriptions');
 Route::get('/leaderboards/trivia-wins', [LeaderboardController::class, 'triviaWins'])->name('leaderboards.trivia-wins');
+Route::get('/leaderboards/raiders', [LeaderboardController::class, 'raiders'])->name('leaderboards.raiders');
 
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');
