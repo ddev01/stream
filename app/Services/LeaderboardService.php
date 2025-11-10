@@ -142,44 +142,67 @@ class LeaderboardService
      */
     public function getTopGifters(int $limit = 5): Collection
     {
-        $topGifters = SubscriptionHistory::query()
-            ->selectRaw('gifter_user_id, COUNT(*) as gift_count')
-            ->whereNotNull('gifter_user_id')
-            ->groupBy('gifter_user_id')
-            ->orderByDesc('gift_count')
-            ->orderBy('gifter_user_id', 'asc') // Tie-breaker: lower ID appears first
-            ->limit($limit)
-            ->get()
-            ->map(function ($item) {
-                $twitchUser = \App\Models\TwitchUser::where('twitch_id', $item->gifter_user_id)->first();
+        // Use window function to calculate positions efficiently in a single query
+        // This avoids N+1 queries by calculating all positions at once
+        $connection = DB::connection();
+        $subscriptionTable = $connection->getTablePrefix().'subscription_history';
+        $usersTable = $connection->getTablePrefix().'twitch_users';
 
-                // Create a simple object that mimics TwitchUserStat structure for the card component
-                return (object) [
-                    'gift_count' => $item->gift_count,
-                    'twitchUser' => $twitchUser,
-                    'twitch_user_id' => $item->gifter_user_id,
-                    'value' => $item->gift_count, // For compatibility with leaderboard card
-                ];
-            })
-            ->filter(fn ($item) => $item->twitchUser !== null); // Filter out users that don't exist
+        $results = $connection->select("
+            SELECT 
+                ranked_gifters.*,
+                twitch_users.id as twitch_user_table_id,
+                twitch_users.twitch_id,
+                twitch_users.user_id,
+                twitch_users.display_name,
+                twitch_users.profile_image_url,
+                twitch_users.broadcaster_type,
+                twitch_users.description,
+                twitch_users.twitch_created_at,
+                twitch_users.email,
+                twitch_users.created_at as twitch_user_created_at,
+                twitch_users.updated_at as twitch_user_updated_at
+            FROM (
+                SELECT 
+                    gifter_user_id,
+                    COUNT(*) as gift_count,
+                    ROW_NUMBER() OVER (
+                        ORDER BY 
+                            COUNT(*) DESC,
+                            gifter_user_id ASC
+                    ) as position
+                FROM {$subscriptionTable}
+                WHERE gifter_user_id IS NOT NULL
+                GROUP BY gifter_user_id
+            ) as ranked_gifters
+            INNER JOIN {$usersTable} ON ranked_gifters.gifter_user_id = twitch_users.twitch_id
+            ORDER BY ranked_gifters.position
+            LIMIT ?
+        ", [$limit]);
 
-        // Calculate sequential position for each gifter (no ties - each gets unique position)
-        // Use gift_count DESC, then gifter_user_id ASC as tie-breaker
-        return $topGifters->map(function ($item) {
-            $position = SubscriptionHistory::query()
-                ->selectRaw('gifter_user_id, COUNT(*) as gift_count')
-                ->whereNotNull('gifter_user_id')
-                ->groupBy('gifter_user_id')
-                ->havingRaw('COUNT(*) > ? OR (COUNT(*) = ? AND gifter_user_id < ?)', [
-                    $item->gift_count,
-                    $item->gift_count,
-                    $item->twitch_user_id, // Use twitch_user_id which is the same as gifter_user_id
-                ])
-                ->count() + 1;
+        return collect($results)->map(function ($row) {
+            $twitchUser = new \App\Models\TwitchUser;
+            $twitchUser->id = $row->twitch_user_table_id;
+            $twitchUser->twitch_id = $row->twitch_id;
+            $twitchUser->user_id = $row->user_id;
+            $twitchUser->display_name = $row->display_name;
+            $twitchUser->profile_image_url = $row->profile_image_url;
+            $twitchUser->broadcaster_type = $row->broadcaster_type;
+            $twitchUser->description = $row->description;
+            $twitchUser->twitch_created_at = $row->twitch_created_at;
+            $twitchUser->email = $row->email;
+            $twitchUser->created_at = $row->twitch_user_created_at;
+            $twitchUser->updated_at = $row->twitch_user_updated_at;
+            $twitchUser->exists = true;
+            $twitchUser->syncOriginal();
 
-            $item->position = $position;
-
-            return $item;
+            return (object) [
+                'gift_count' => (int) $row->gift_count,
+                'twitchUser' => $twitchUser,
+                'twitch_user_id' => $row->gifter_user_id,
+                'value' => (int) $row->gift_count,
+                'position' => (int) $row->position,
+            ];
         });
     }
 
@@ -232,44 +255,67 @@ class LeaderboardService
      */
     public function getTopRaiders(int $limit = 5): Collection
     {
-        $topRaiders = RaidHistory::query()
-            ->selectRaw('user_id, COUNT(*) as raid_count')
-            ->whereNotNull('user_id')
-            ->groupBy('user_id')
-            ->orderByDesc('raid_count')
-            ->orderBy('user_id', 'asc') // Tie-breaker: lower ID appears first
-            ->limit($limit)
-            ->get()
-            ->map(function ($item) {
-                $twitchUser = \App\Models\TwitchUser::where('twitch_id', $item->user_id)->first();
+        // Use window function to calculate positions efficiently in a single query
+        // This avoids N+1 queries by calculating all positions at once
+        $connection = DB::connection();
+        $raidTable = $connection->getTablePrefix().'raid_history';
+        $usersTable = $connection->getTablePrefix().'twitch_users';
 
-                // Create a simple object that mimics TwitchUserStat structure for the card component
-                return (object) [
-                    'raid_count' => $item->raid_count,
-                    'twitchUser' => $twitchUser,
-                    'twitch_user_id' => $item->user_id,
-                    'value' => $item->raid_count, // For compatibility with leaderboard card
-                ];
-            })
-            ->filter(fn ($item) => $item->twitchUser !== null); // Filter out users that don't exist
+        $results = $connection->select("
+            SELECT 
+                ranked_raiders.*,
+                twitch_users.id as twitch_user_table_id,
+                twitch_users.twitch_id,
+                twitch_users.user_id,
+                twitch_users.display_name,
+                twitch_users.profile_image_url,
+                twitch_users.broadcaster_type,
+                twitch_users.description,
+                twitch_users.twitch_created_at,
+                twitch_users.email,
+                twitch_users.created_at as twitch_user_created_at,
+                twitch_users.updated_at as twitch_user_updated_at
+            FROM (
+                SELECT 
+                    user_id,
+                    COUNT(*) as raid_count,
+                    ROW_NUMBER() OVER (
+                        ORDER BY 
+                            COUNT(*) DESC,
+                            user_id ASC
+                    ) as position
+                FROM {$raidTable}
+                WHERE user_id IS NOT NULL
+                GROUP BY user_id
+            ) as ranked_raiders
+            INNER JOIN {$usersTable} ON ranked_raiders.user_id = twitch_users.twitch_id
+            ORDER BY ranked_raiders.position
+            LIMIT ?
+        ", [$limit]);
 
-        // Calculate sequential position for each raider (no ties - each gets unique position)
-        // Use raid_count DESC, then user_id ASC as tie-breaker
-        return $topRaiders->map(function ($item) {
-            $position = RaidHistory::query()
-                ->selectRaw('user_id, COUNT(*) as raid_count')
-                ->whereNotNull('user_id')
-                ->groupBy('user_id')
-                ->havingRaw('COUNT(*) > ? OR (COUNT(*) = ? AND user_id < ?)', [
-                    $item->raid_count,
-                    $item->raid_count,
-                    $item->twitch_user_id, // Use twitch_user_id which is the same as user_id
-                ])
-                ->count() + 1;
+        return collect($results)->map(function ($row) {
+            $twitchUser = new \App\Models\TwitchUser;
+            $twitchUser->id = $row->twitch_user_table_id;
+            $twitchUser->twitch_id = $row->twitch_id;
+            $twitchUser->user_id = $row->user_id;
+            $twitchUser->display_name = $row->display_name;
+            $twitchUser->profile_image_url = $row->profile_image_url;
+            $twitchUser->broadcaster_type = $row->broadcaster_type;
+            $twitchUser->description = $row->description;
+            $twitchUser->twitch_created_at = $row->twitch_created_at;
+            $twitchUser->email = $row->email;
+            $twitchUser->created_at = $row->twitch_user_created_at;
+            $twitchUser->updated_at = $row->twitch_user_updated_at;
+            $twitchUser->exists = true;
+            $twitchUser->syncOriginal();
 
-            $item->position = $position;
-
-            return $item;
+            return (object) [
+                'raid_count' => (int) $row->raid_count,
+                'twitchUser' => $twitchUser,
+                'twitch_user_id' => $row->user_id,
+                'value' => (int) $row->raid_count,
+                'position' => (int) $row->position,
+            ];
         });
     }
 
@@ -278,44 +324,67 @@ class LeaderboardService
      */
     public function getTopRaiderViews(int $limit = 5): Collection
     {
-        $topRaiderViews = RaidHistory::query()
-            ->selectRaw('user_id, SUM(viewers) as total_viewers')
-            ->whereNotNull('user_id')
-            ->groupBy('user_id')
-            ->orderByDesc('total_viewers')
-            ->orderBy('user_id', 'asc') // Tie-breaker: lower ID appears first
-            ->limit($limit)
-            ->get()
-            ->map(function ($item) {
-                $twitchUser = \App\Models\TwitchUser::where('twitch_id', $item->user_id)->first();
+        // Use window function to calculate positions efficiently in a single query
+        // This avoids N+1 queries by calculating all positions at once
+        $connection = DB::connection();
+        $raidTable = $connection->getTablePrefix().'raid_history';
+        $usersTable = $connection->getTablePrefix().'twitch_users';
 
-                // Create a simple object that mimics TwitchUserStat structure for the card component
-                return (object) [
-                    'total_viewers' => $item->total_viewers,
-                    'twitchUser' => $twitchUser,
-                    'twitch_user_id' => $item->user_id,
-                    'value' => $item->total_viewers, // For compatibility with leaderboard card
-                ];
-            })
-            ->filter(fn ($item) => $item->twitchUser !== null); // Filter out users that don't exist
+        $results = $connection->select("
+            SELECT 
+                ranked_raiders.*,
+                twitch_users.id as twitch_user_table_id,
+                twitch_users.twitch_id,
+                twitch_users.user_id,
+                twitch_users.display_name,
+                twitch_users.profile_image_url,
+                twitch_users.broadcaster_type,
+                twitch_users.description,
+                twitch_users.twitch_created_at,
+                twitch_users.email,
+                twitch_users.created_at as twitch_user_created_at,
+                twitch_users.updated_at as twitch_user_updated_at
+            FROM (
+                SELECT 
+                    user_id,
+                    SUM(viewers) as total_viewers,
+                    ROW_NUMBER() OVER (
+                        ORDER BY 
+                            SUM(viewers) DESC,
+                            user_id ASC
+                    ) as position
+                FROM {$raidTable}
+                WHERE user_id IS NOT NULL
+                GROUP BY user_id
+            ) as ranked_raiders
+            INNER JOIN {$usersTable} ON ranked_raiders.user_id = twitch_users.twitch_id
+            ORDER BY ranked_raiders.position
+            LIMIT ?
+        ", [$limit]);
 
-        // Calculate sequential position for each raider views (no ties - each gets unique position)
-        // Use total_viewers DESC, then user_id ASC as tie-breaker
-        return $topRaiderViews->map(function ($item) {
-            $position = RaidHistory::query()
-                ->selectRaw('user_id, SUM(viewers) as total_viewers')
-                ->whereNotNull('user_id')
-                ->groupBy('user_id')
-                ->havingRaw('SUM(viewers) > ? OR (SUM(viewers) = ? AND user_id < ?)', [
-                    $item->total_viewers,
-                    $item->total_viewers,
-                    $item->twitch_user_id, // Use twitch_user_id which is the same as user_id
-                ])
-                ->count() + 1;
+        return collect($results)->map(function ($row) {
+            $twitchUser = new \App\Models\TwitchUser;
+            $twitchUser->id = $row->twitch_user_table_id;
+            $twitchUser->twitch_id = $row->twitch_id;
+            $twitchUser->user_id = $row->user_id;
+            $twitchUser->display_name = $row->display_name;
+            $twitchUser->profile_image_url = $row->profile_image_url;
+            $twitchUser->broadcaster_type = $row->broadcaster_type;
+            $twitchUser->description = $row->description;
+            $twitchUser->twitch_created_at = $row->twitch_created_at;
+            $twitchUser->email = $row->email;
+            $twitchUser->created_at = $row->twitch_user_created_at;
+            $twitchUser->updated_at = $row->twitch_user_updated_at;
+            $twitchUser->exists = true;
+            $twitchUser->syncOriginal();
 
-            $item->position = $position;
-
-            return $item;
+            return (object) [
+                'total_viewers' => (int) $row->total_viewers,
+                'twitchUser' => $twitchUser,
+                'twitch_user_id' => $row->user_id,
+                'value' => (int) $row->total_viewers,
+                'position' => (int) $row->position,
+            ];
         });
     }
 
