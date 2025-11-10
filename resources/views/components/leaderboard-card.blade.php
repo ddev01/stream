@@ -4,6 +4,7 @@
     'userStat' => null,
     'userPosition' => null,
     'valueFormatter' => null,
+    'icon' => null,
 ])
 
 @php
@@ -21,11 +22,28 @@
         'Top 5 Raider Views' => 'leaderboards.raiders',
     ];
     $leaderboardUrl = $leaderboardRoutes[$title] ?? null;
+    
+    // Map titles to icons (matching sidebar navigation)
+    $iconMap = [
+        'Top 5 Points' => 'chart-bar',
+        'Top 5 Watchtime' => 'clock',
+        'Top 5 Top Three' => 'trophy',
+        'Top 5 Gifted Subs' => 'gift',
+        'Top 5 Trivia Wins' => 'academic-cap',
+        'Top 5 Raiders' => 'fire',
+        'Top 5 Raider Views' => 'fire',
+    ];
+    $iconName = $icon ?? $iconMap[$title] ?? null;
 @endphp
 
 <div class="relative overflow-hidden rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
     <div class="mb-5 flex items-center justify-between">
-        <h2 class="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">{{ $title }}</h2>
+        <h2 class="flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+            @if ($iconName)
+                <flux:icon :name="$iconName" class="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+            @endif
+            {{ $title }}
+        </h2>
         @if ($leaderboardUrl)
             <a href="{{ route($leaderboardUrl) }}" wire:navigate class="text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300">
                 <x-heroicon-o-arrow-top-right-on-square class="h-4 w-4" />

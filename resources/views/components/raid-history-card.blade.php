@@ -6,7 +6,10 @@
 
 <div class="relative overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 lg:p-5 dark:border-neutral-800 dark:bg-neutral-900">
 	<div class="mb-4 flex items-center justify-between lg:mb-5">
-		<h2 class="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">{{ $title }}</h2>
+		<h2 class="flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+			<flux:icon class="h-5 w-5 text-neutral-500 dark:text-neutral-400" name="fire" />
+			{{ $title }}
+		</h2>
 		<a class="text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300" href="{{ route('leaderboards.raiders') }}" wire:navigate>
 			<x-heroicon-o-arrow-top-right-on-square class="h-4 w-4" />
 		</a>
@@ -29,7 +32,7 @@
 						</a>
 					</span>
 					<div class="flex shrink-0 items-center gap-2 font-mono text-xs text-neutral-500 lg:gap-3 dark:text-neutral-400">
-						<span class="flex min-w-[3.5rem] items-center justify-end gap-1 tabular-nums lg:min-w-16 lg:gap-1.5">
+						<span class="flex  items-center justify-end gap-1 tabular-nums lg:gap-1.5">
 							<span class="whitespace-nowrap">{{ number_format($raid->viewers) }}</span>
 							<x-heroicon-o-eye class="h-3.5 w-3.5 shrink-0 text-neutral-400 dark:text-neutral-500" />
 						</span>
