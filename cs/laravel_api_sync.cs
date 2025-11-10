@@ -220,6 +220,92 @@ public class CPHInline
         }
     }
 
+    /// <summary>
+    /// Post recent raid history (last 5 minutes) to Laravel API
+    /// </summary>
+    public bool PostRaidHistoryRecent()
+    {
+        try
+        {
+            WriteLog("INFO", "Starting recent raid history sync");
+            if (!File.Exists(DB_PATH))
+            {
+                WriteLog("ERROR", $"Database file not found at {DB_PATH}");
+                CPH.SendMessage("Error: Database file not found");
+                return false;
+            }
+
+            DateTime fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
+            var raidHistory = QueryRaidHistory(fiveMinutesAgo);
+            if (raidHistory == null || raidHistory.Count == 0)
+            {
+                WriteLog("ERROR", "No raid history found in the last 5 minutes");
+                CPH.SendMessage("No raid history record found in the last 5 minutes");
+                return false;
+            }
+
+            WriteLog("INFO", $"Found {raidHistory.Count} raid history record(s)");
+            var payload = new
+            {
+                raid_history = raidHistory
+            };
+            bool success = PostToApi("/api/twitch/raid-history", payload, "recent raid history sync");
+            if (success)
+            {
+                WriteLog("INFO", $"✓ Recent raid history sync completed - {raidHistory.Count} record(s)");
+            }
+
+            return success;
+        }
+        catch (Exception ex)
+        {
+            WriteLog("ERROR", $"PostRaidHistoryRecent error: {ex.Message} | Inner: {ex.InnerException?.Message ?? "None"} | StackTrace: {ex.StackTrace}");
+            CPH.SendMessage($"Error syncing raid history: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Post all raid history to Laravel API
+    /// </summary>
+    public bool PostRaidHistoryBulk()
+    {
+        try
+        {
+            WriteLog("INFO", "Starting bulk raid history sync");
+            if (!File.Exists(DB_PATH))
+            {
+                WriteLog("ERROR", $"Database file not found at {DB_PATH}");
+                return false;
+            }
+
+            var raidHistory = QueryRaidHistory(null);
+            if (raidHistory == null || raidHistory.Count == 0)
+            {
+                WriteLog("WARN", "No raid history records found in database");
+                return true;
+            }
+
+            WriteLog("INFO", $"Found {raidHistory.Count} raid history records");
+            var payload = new
+            {
+                raid_history = raidHistory
+            };
+            bool success = PostToApi("/api/twitch/raid-history", payload, "raid history sync");
+            if (success)
+            {
+                WriteLog("INFO", $"✓ Raid history sync completed - {raidHistory.Count} records");
+            }
+
+            return success;
+        }
+        catch (Exception ex)
+        {
+            WriteLog("ERROR", $"PostRaidHistoryBulk error: {ex.Message} | Inner: {ex.InnerException?.Message ?? "None"} | StackTrace: {ex.StackTrace}");
+            return false;
+        }
+    }
+
     // ===== VALIDATION HELPERS =====
     private enum ValidationResult
     {
@@ -468,6 +554,83 @@ public class CPHInline
             },
             ["userId"] = userId,
             ["gifterUserId"] = gifterUserId
+        };
+    }
+
+    /// <summary>
+    /// Query raid history from LiteDB
+    /// </summary>
+    /// <param name = "since">If provided, only return records since this time. If null, return all records.</param>
+    private List<object> QueryRaidHistory(DateTime? since)
+    {
+        try
+        {
+            var history = new List<object>();
+            using (var db = new LiteDatabase($"Filename={DB_PATH};ReadOnly=true"))
+            {
+                var collection = db.GetCollection("raidHistory");
+                var results = since.HasValue ? collection.Find(Query.GTE("timestamp", since.Value)).ToList() : collection.FindAll().ToList();
+                foreach (var doc in results)
+                {
+                    var record = TransformRaidRecord(doc);
+                    if (record != null)
+                    {
+                        history.Add(record);
+                    }
+                }
+            }
+
+            return history;
+        }
+        catch (Exception ex)
+        {
+            WriteLog("ERROR", $"QueryRaidHistory error: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Transform a raid history BsonDocument to API format
+    /// </summary>
+    private Dictionary<string, object> TransformRaidRecord(BsonDocument doc)
+    {
+        // Extract _id (ObjectId)
+        BsonValue idValue = doc["_id"];
+        string oid = idValue.IsObjectId ? idValue.AsObjectId.ToString() : idValue.ToString();
+        // Extract timestamp (DateTime)
+        BsonValue timestampValue = doc["timestamp"];
+        string timestampDate = null;
+        if (timestampValue.IsDateTime)
+        {
+            timestampDate = timestampValue.AsDateTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+        }
+        else if (timestampValue.IsString)
+        {
+            timestampDate = timestampValue.AsString;
+        }
+
+        // Extract userId and viewers
+        string userId = doc.ContainsKey("userId") ? doc["userId"].ToString() : null;
+        int viewers = doc.ContainsKey("viewers") ? doc["viewers"].AsInt32 : 0;
+        // Skip records with missing required fields
+        if (string.IsNullOrEmpty(oid) || string.IsNullOrEmpty(timestampDate) || string.IsNullOrEmpty(userId))
+        {
+            return null;
+        }
+
+        // Transform to Laravel API format
+        return new Dictionary<string, object>
+        {
+            ["_id"] = new Dictionary<string, object>
+            {
+                ["$oid"] = oid
+            },
+            ["timestamp"] = new Dictionary<string, object>
+            {
+                ["$date"] = timestampDate
+            },
+            ["userId"] = userId,
+            ["viewers"] = viewers
         };
     }
 
