@@ -23,8 +23,8 @@
     {{
         $attributes->merge($customAttributes)
                 ->class([
-                    'bg-white dark:bg-zinc-800 dark:text-zinc-100 rappasoft-striped-row hover:bg-neutral-100 dark:hover:bg-zinc-700 transition-colors' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 === 0),
-                    'bg-neutral-50 dark:bg-zinc-800 dark:text-zinc-100 rappasoft-striped-row hover:bg-neutral-100 dark:hover:bg-zinc-700 transition-colors' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 !== 0),
+                    'bg-white dark:bg-transparent dark:text-neutral-100 rappasoft-striped-row hover:bg-neutral-100 dark:hover:bg-neutral-900/50 transition-colors border-b border-neutral-200 dark:border-neutral-800' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 === 0),
+                    'bg-neutral-50 dark:bg-transparent dark:text-neutral-100 rappasoft-striped-row hover:bg-neutral-100 dark:hover:bg-neutral-900/50 transition-colors border-b border-neutral-200 dark:border-neutral-800' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 !== 0),
                     'cursor-pointer' => ($isTailwind && $this->hasTableRowUrl() && ($customAttributes['default'] ?? true)),
                     'bg-light rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 === 0 && ($customAttributes['default'] ?? true)),
                     'bg-white rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 !== 0 && ($customAttributes['default'] ?? true)),

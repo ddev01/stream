@@ -71,44 +71,58 @@ select:focus[data-flux-control] {
 @layer components {
     /* Override Livewire Tables default colors with zinc/neutral palette */
     [wire\:id*="livewire-tables"] {
-        @apply bg-white dark:bg-zinc-800;
+        @apply bg-white dark:bg-transparent;
+    }
+
+    /* Table wrapper - make it look like a card */
+    [wire\:id*="livewire-tables"] > div > div,
+    [wire\:key*="table"] {
+    }
+
+    /* Ensure table wrapper has card-like appearance */
+    [wire\:key*="-twrap"] {
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .dark [wire\:key*="-twrap"] {
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
     }
 
     /* Table styling - target tables within Livewire components */
     [wire\:id*="livewire-tables"] table,
     [wire\:id*="livewire-tables"] .table {
-        @apply bg-white dark:bg-zinc-800;
-        @apply border-neutral-200 dark:border-neutral-700;
+        @apply bg-white dark:bg-transparent;
+        @apply border-neutral-200 dark:border-neutral-800;
     }
 
     /* Table header */
     [wire\:id*="livewire-tables"] thead,
     [wire\:id*="livewire-tables"] .thead {
-        @apply bg-neutral-50 dark:bg-zinc-900;
+        @apply bg-neutral-50 dark:bg-neutral-900;
     }
 
     [wire\:id*="livewire-tables"] thead th,
     [wire\:id*="livewire-tables"] .thead th {
-        @apply !border-neutral-200 dark:!border-neutral-700;
-        @apply !text-neutral-700 dark:!text-neutral-300;
-        @apply !bg-neutral-50 dark:!bg-zinc-900;
+        @apply !border-neutral-200 dark:!border-neutral-800;
+        @apply !text-neutral-700 dark:!text-neutral-400;
+        @apply !bg-neutral-50 dark:!bg-neutral-900;
     }
 
     /* Table body rows */
     [wire\:id*="livewire-tables"] tbody tr,
     [wire\:id*="livewire-tables"] .tbody tr {
-        @apply border-neutral-200 dark:border-neutral-700;
-        @apply bg-white dark:bg-zinc-800;
+        @apply border-neutral-200 dark:border-neutral-800;
+        @apply bg-white dark:bg-transparent;
     }
 
     [wire\:id*="livewire-tables"] tbody tr:hover,
     [wire\:id*="livewire-tables"] .tbody tr:hover {
-        @apply bg-neutral-100 dark:bg-zinc-700;
+        @apply bg-neutral-100 dark:bg-neutral-900/50;
     }
 
     [wire\:id*="livewire-tables"] tbody td,
     [wire\:id*="livewire-tables"] .tbody td {
-        @apply !border-neutral-200 dark:!border-neutral-700;
+        @apply !border-neutral-200 dark:!border-neutral-800;
         @apply !text-neutral-900 dark:!text-neutral-100;
     }
 
@@ -176,38 +190,38 @@ select:focus[data-flux-control] {
     /* Override any blue/slate/gray colors with neutral/zinc in dark mode */
     .dark [wire\:id*="livewire-tables"] table,
     .dark table[wire\:key*="table"] {
-        background-color: rgb(39 39 42) !important; /* zinc-800 */
-        border-color: rgb(63 63 70) !important; /* zinc-700 */
-        color: rgb(244 244 245) !important; /* zinc-100 */
+        background-color: transparent !important;
+        border-color: rgb(38 38 38) !important; /* neutral-800 */
+        color: rgb(245 245 245) !important; /* neutral-100 */
     }
 
     .dark [wire\:id*="livewire-tables"] thead,
     .dark table[wire\:key*="table"] thead {
-        background-color: rgb(24 24 27) !important; /* zinc-900 */
+        background-color: rgb(23 23 23) !important; /* neutral-900 */
     }
 
     .dark [wire\:id*="livewire-tables"] thead th,
     .dark table[wire\:key*="table"] thead th {
-        background-color: rgb(24 24 27) !important; /* zinc-900 */
-        border-color: rgb(63 63 70) !important; /* zinc-700 */
-        color: rgb(212 212 216) !important; /* zinc-300 */
+        background-color: rgb(23 23 23) !important; /* neutral-900 */
+        border-color: rgb(38 38 38) !important; /* neutral-800 */
+        color: rgb(163 163 163) !important; /* neutral-400 */
     }
 
     .dark [wire\:id*="livewire-tables"] tbody tr,
     .dark table[wire\:key*="table"] tbody tr {
-        background-color: rgb(39 39 42) !important; /* zinc-800 */
-        border-color: rgb(63 63 70) !important; /* zinc-700 */
+        background-color: transparent !important;
+        border-color: rgb(38 38 38) !important; /* neutral-800 */
     }
 
     .dark [wire\:id*="livewire-tables"] tbody tr:hover,
     .dark table[wire\:key*="table"] tbody tr:hover {
-        background-color: rgb(63 63 70) !important; /* zinc-700 */
+        background-color: rgba(23, 23, 23, 0.5) !important; /* neutral-900 with 50% opacity */
     }
 
     .dark [wire\:id*="livewire-tables"] tbody td,
     .dark table[wire\:key*="table"] tbody td {
-        color: rgb(244 244 245) !important; /* zinc-100 */
-        border-color: rgb(63 63 70) !important; /* zinc-700 */
+        color: rgb(245 245 245) !important; /* neutral-100 */
+        border-color: rgb(38 38 38) !important; /* neutral-800 */
     }
 
     /* Override blue/slate colors that might be used */
