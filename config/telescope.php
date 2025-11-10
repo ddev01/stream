@@ -22,6 +22,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Record All Entries
+    |--------------------------------------------------------------------------
+    |
+    | When set to true, Telescope will record all entries regardless of
+    | environment. When false, only exceptions, failed requests/jobs,
+    | scheduled tasks, and entries with monitored tags are recorded
+    | in non-local environments.
+    |
+    */
+
+    'record_all_entries' => env('TELESCOPE_RECORD_ALL_ENTRIES', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Telescope Domain
     |--------------------------------------------------------------------------
     |
