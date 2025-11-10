@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import '../../vendor/livewire/flux/dist/flux.css';
+@import "tailwindcss";
+@import "../../vendor/livewire/flux/dist/flux.css";
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -11,7 +11,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans:
+        "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -39,7 +42,6 @@
 }
 
 @layer base {
-
     *,
     ::after,
     ::before,
@@ -54,7 +56,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -81,11 +83,15 @@ select:focus[data-flux-control] {
 
     /* Ensure table wrapper has card-like appearance */
     [wire\:key*="-twrap"] {
-        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        box-shadow:
+            0 1px 3px 0 rgb(0 0 0 / 0.1),
+            0 1px 2px -1px rgb(0 0 0 / 0.1);
     }
 
     .dark [wire\:key*="-twrap"] {
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+        box-shadow:
+            0 10px 15px -3px rgb(0 0 0 / 0.3),
+            0 4px 6px -4px rgb(0 0 0 / 0.3);
     }
 
     /* Table styling - target tables within Livewire components */
@@ -215,7 +221,12 @@ select:focus[data-flux-control] {
 
     .dark [wire\:id*="livewire-tables"] tbody tr:hover,
     .dark table[wire\:key*="table"] tbody tr:hover {
-        background-color: rgba(23, 23, 23, 0.5) !important; /* neutral-900 with 50% opacity */
+        background-color: rgba(
+            23,
+            23,
+            23,
+            0.5
+        ) !important; /* neutral-900 with 50% opacity */
     }
 
     .dark [wire\:id*="livewire-tables"] tbody td,
