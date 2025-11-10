@@ -46,4 +46,12 @@ class LeaderboardController extends Controller
     {
         return view('trivia-wins-leaderboard');
     }
+
+    /**
+     * Display the raiders leaderboard
+     */
+    public function raiders(): \Illuminate\View\View
+    {
+        return view('raiders-leaderboard');
+    }
 }

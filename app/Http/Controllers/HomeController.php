@@ -18,6 +18,9 @@ class HomeController extends Controller
         $topTopThree = $leaderboardService->getTopStats('topThreeCount');
         $topGifters = $leaderboardService->getTopGifters(5);
         $topTriviaWins = $leaderboardService->getTopStats('triviaWins');
+        $topRaiders = $leaderboardService->getTopRaiders(5);
+        $topRaiderViews = $leaderboardService->getTopRaiderViews(5);
+        $recentRaidHistory = $leaderboardService->getRecentRaidHistory(5);
 
         // Get authenticated user's stats and positions if logged in
         $userPointsData = null;
@@ -25,6 +28,8 @@ class HomeController extends Controller
         $userTopThreeData = null;
         $userGifterData = null;
         $userTriviaWinsData = null;
+        $userRaiderData = null;
+        $userRaiderViewsData = null;
 
         if (Auth::check()) {
             $user = Auth::user();
@@ -33,6 +38,8 @@ class HomeController extends Controller
             $userTopThreeData = $leaderboardService->getUserStatAndPosition($user, 'topThreeCount');
             $userGifterData = $leaderboardService->getUserGifterStatAndPosition($user);
             $userTriviaWinsData = $leaderboardService->getUserStatAndPosition($user, 'triviaWins');
+            $userRaiderData = $leaderboardService->getUserRaiderStatAndPosition($user);
+            $userRaiderViewsData = $leaderboardService->getUserRaiderViewsStatAndPosition($user);
         }
 
         return view('home', [
@@ -41,6 +48,9 @@ class HomeController extends Controller
             'topTopThree' => $topTopThree,
             'topGifters' => $topGifters,
             'topTriviaWins' => $topTriviaWins,
+            'topRaiders' => $topRaiders,
+            'topRaiderViews' => $topRaiderViews,
+            'recentRaidHistory' => $recentRaidHistory,
             'userStats' => $userPointsData['stat'] ?? null,
             'userPosition' => $userPointsData['position'] ?? null,
             'userWatchtimeStats' => $userWatchtimeData['stat'] ?? null,
@@ -51,6 +61,10 @@ class HomeController extends Controller
             'userGifterPosition' => $userGifterData['position'] ?? null,
             'userTriviaWinsStats' => $userTriviaWinsData['stat'] ?? null,
             'userTriviaWinsPosition' => $userTriviaWinsData['position'] ?? null,
+            'userRaiderStats' => $userRaiderData['stat'] ?? null,
+            'userRaiderPosition' => $userRaiderData['position'] ?? null,
+            'userRaiderViewsStats' => $userRaiderViewsData['stat'] ?? null,
+            'userRaiderViewsPosition' => $userRaiderViewsData['position'] ?? null,
         ]);
     }
 }
