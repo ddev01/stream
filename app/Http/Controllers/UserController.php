@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\TwitchUser;
 
 /**
  * Controller for user-related pages
@@ -12,8 +12,8 @@ class UserController extends Controller
     /**
      * Display the specified user's profile
      */
-    public function show(User $user): \Illuminate\View\View
+    public function show(TwitchUser $twitchUser): \Illuminate\View\View
     {
-        return view('users.show', ['user' => $user]);
+        return view('users.show', ['twitchUser' => $twitchUser]);
     }
 }

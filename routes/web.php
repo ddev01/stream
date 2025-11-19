@@ -34,7 +34,7 @@ Route::get('/leaderboards/raiders', [LeaderboardController::class, 'raiders'])->
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // User routes
-Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+Route::get('users/{twitchUser}', [UserController::class, 'show'])->name('users.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
