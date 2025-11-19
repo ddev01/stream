@@ -187,6 +187,7 @@ services:
       AUTHORIZED_KEYS: >
         "# Start Keys
          ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPifqshxdjUmSi8eBV0QfrVw2871N+uhMdra2koE2bDK macbook
+         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP45ciephKN2JVkJbz4kcIUa4IIwAjEIR/JzUmrwXXif Omarchy
          # End Keys"
       ALLOWED_IPS: "AllowUsers tunnel"
     volumes:
