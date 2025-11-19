@@ -176,14 +176,14 @@ class RaidersLeaderboardTable extends DataTableComponent
                     return view('livewire.tables.user-link', [
                         'displayName' => 'Unknown',
                         'hasUser' => false,
-                        'userId' => null,
+                        'twitchId' => null,
                     ]);
                 }
 
                 return view('livewire.tables.user-link', [
                     'displayName' => $twitchUser->display_name ?? 'Unknown',
                     'hasUser' => $twitchUser->user !== null,
-                    'userId' => $twitchUser->user?->id ?? null,
+                    'twitchId' => $twitchUser->twitch_id ?? null,
                 ]);
             })
             ->sortable(function (Builder $query, string $direction) {

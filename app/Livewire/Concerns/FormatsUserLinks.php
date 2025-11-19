@@ -15,14 +15,14 @@ trait FormatsUserLinks
             return [
                 'displayName' => 'Unknown',
                 'hasUser' => false,
-                'userId' => null,
+                'twitchId' => null,
             ];
         }
 
         return [
             'displayName' => $twitchUser->display_name ?? 'Unknown',
             'hasUser' => $twitchUser->relationLoaded('user') ? $twitchUser->user !== null : ($twitchUser->user_id !== null),
-            'userId' => $twitchUser->user?->id ?? ($twitchUser->user_id ?? null),
+            'twitchId' => $twitchUser->twitch_id ?? null,
         ];
     }
 }
