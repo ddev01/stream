@@ -17,7 +17,7 @@
 			<flux:navlist variant="outline">
 				<flux:navlist.group class="grid" :heading="__('Platform')">
 					<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
-					<flux:navlist.item icon="magnifying-glass" x-data="" x-on:click.prevent="$dispatch('open-modal', 'search-users-modal')" wire:navigate="false">{{ __('Search Users') }}</flux:navlist.item>
+					<flux:navlist.item icon="magnifying-glass" x-data="" x-on:click.prevent="$dispatch('open-search-modal')" wire:navigate="false">{{ __('Search Users') }}</flux:navlist.item>
 				</flux:navlist.group>
 				<flux:navlist.group class="grid" :heading="__('Leaderboards')">
 					<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points') }}</flux:navlist.item>
