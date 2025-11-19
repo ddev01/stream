@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * Represents a Twitch user identity, which may or may not be linked to a Laravel app user
@@ -33,6 +34,28 @@ class TwitchUser extends Model
         return [
             'twitch_created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the route key for the model
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'twitch_id';
+    }
+
+    /**
+     * Get the user's initials from display name
+     */
+    public function initials(): string
+    {
+        $name = $this->display_name ?? '';
+
+        return Str::of($name)
+            ->explode(' ')
+            ->take(2)
+            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->implode('');
     }
 
     /**
@@ -73,5 +96,21 @@ class TwitchUser extends Model
                 'last_write' => $lastWrite ?? now(),
             ]
         );
+    }
+
+    /**
+     * Get the count of gifted subscriptions for this Twitch user
+     */
+    public function getGiftedSubsCount(): int
+    {
+        return \App\Models\SubscriptionHistory::where('gifter_user_id', $this->twitch_id)->count();
+    }
+
+    /**
+     * Get the count of raids for this Twitch user
+     */
+    public function getRaidsCount(): int
+    {
+        return \App\Models\RaidHistory::where('user_id', $this->twitch_id)->count();
     }
 }
