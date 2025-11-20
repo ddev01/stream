@@ -17,8 +17,16 @@
 			<flux:navlist variant="outline">
 				<flux:navlist.group class="grid" :heading="__('Platform')">
 					<flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
-					<flux:navlist.item icon="magnifying-glass" x-data="" x-on:click.prevent="$dispatch('open-search-modal'); $dispatch('flux-sidebar-toggle')" 
-					wire:navigate="false">{{ __('Search Users') }}</flux:navlist.item>
+					<flux:navlist.item icon="magnifying-glass" x-data="{ isMac: navigator.platform.toUpperCase().indexOf('MAC') >= 0 }" x-on:click.prevent="$dispatch('open-search-modal'); $dispatch('flux-sidebar-toggle')" wire:navigate="false">
+						<span class="flex items-center justify-between gap-2">
+							<span>{{ __('Search Users') }}</span>
+							<kbd class="hidden h-5 select-none items-center gap-1 rounded border border-neutral-200 bg-neutral-50 px-1.5 font-mono text-[10px] font-medium text-neutral-500 lg:inline-flex dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+								<span x-cloak x-show="isMac">⌘</span>
+								<span x-cloak x-show="!isMac">Ctrl</span>
+								<span>K</span>
+							</kbd>
+						</span>
+					</flux:navlist.item>
 				</flux:navlist.group>
 				<flux:navlist.group class="grid" :heading="__('Leaderboards')">
 					<flux:navlist.item icon="chart-bar" :href="route('leaderboards.points')" :current="request()->routeIs('leaderboards.points')" wire:navigate>{{ __('Points') }}</flux:navlist.item>
