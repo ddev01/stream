@@ -19,7 +19,7 @@
                 " x-on:input="if ($event.target.value.length > 0) loading = true" />
 		</flux:field>
 
-		<div class="relative min-h-[200px] sm:min-h-[360px]">
+		<div class="relative min-h-[326px]">
 			<!-- Show skeleton when Livewire is loading -->
 			<div class="absolute inset-0 z-10" x-show="loading" x-transition x-transition:enter.duration.200ms x-transition:leave.duration.150ms>
 				<div class="max-h-[280px] overflow-y-auto rounded-lg border border-neutral-200 bg-white sm:max-h-[320px] dark:border-neutral-700 dark:bg-neutral-900">
@@ -43,7 +43,7 @@
 			<div class="relative" x-show="!loading" x-transition x-transition:enter.duration.200ms x-transition:leave.duration.150ms>
 				@if (!empty($query))
 					@if (count($results) > 0)
-						<div class="max-h-[280px] overflow-y-auto rounded-lg border border-neutral-200 sm:max-h-[320px] dark:border-neutral-700">
+						<div class="overflow-y-auto rounded-lg border border-neutral-200 max-h-[319px] sm:max-h-[326px] dark:border-neutral-700">
 							<div class="divide-y divide-neutral-200 dark:divide-neutral-700">
 								@foreach ($results as $index => $user)
 									<button class="{{ $selectedIndex === $index ? 'bg-neutral-100 dark:bg-neutral-800' : '' }} group w-full cursor-pointer px-3 py-2.5 text-left transition-all duration-150 hover:bg-neutral-100 hover:shadow-sm sm:px-4 sm:py-3 dark:hover:bg-neutral-900/80" type="button" wire:click="navigateToUser({{ $index }})" x-on:mouseenter="$wire.set('selectedIndex', {{ $index }})">
