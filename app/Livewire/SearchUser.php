@@ -15,18 +15,15 @@ class SearchUser extends Component
 
     public $results = [];
 
-    public bool $isSearching = false;
-
     protected $listeners = ['open-search-modal' => 'open'];
 
     public function updatedQuery(): void
     {
         $this->selectedIndex = -1;
-        $this->isSearching = true;
 
         if (empty($this->query)) {
             $this->results = [];
-            $this->isSearching = false;
+
             return;
         }
 
@@ -36,7 +33,7 @@ class SearchUser extends Component
             $user = TwitchUser::where('twitch_id', $this->query)->first();
             if ($user) {
                 $this->results = [$user->toArray()];
-                $this->isSearching = false;
+
                 return;
             }
         }
@@ -60,8 +57,6 @@ class SearchUser extends Component
             ->limit(8)
             ->get()
             ->toArray();
-
-        $this->isSearching = false;
     }
 
     /**
