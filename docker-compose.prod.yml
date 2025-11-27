@@ -1,39 +1,3 @@
-x-common-restart-policy: &common-restart-policy
-  condition: any
-  delay: 10s
-  max_attempts: 3
-  window: 120s
-
-x-common-deploy-config: &common-deploy-config
-  update_config:
-    parallelism: 1
-    delay: 5s
-    order: stop-first
-  rollback_config:
-    parallelism: 0
-    order: stop-first
-  restart_policy: *common-restart-policy
-
-x-laravel-storage-volumes: &laravel-storage-volumes
-  - "storage_private:/var/www/html/storage/app/private/"
-  - "storage_public:/var/www/html/storage/app/public/"
-  - "storage_sessions:/var/www/html/storage/framework/sessions"
-  - "storage_logs:/var/www/html/storage/logs"
-
-x-laravel-worker-env: &laravel-worker-env
-  APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
-  PHP_OPCACHE_ENABLE: "1"
-
-x-laravel-worker: &laravel-worker
-  image: ${SPIN_IMAGE_DOCKERFILE}
-  networks:
-    - web-public
-  volumes: *laravel-storage-volumes
-  stop_grace_period: 30s
-  stop_signal: SIGTERM
-  environment: *laravel-worker-env
-  deploy: *common-deploy-config
-
 services:
   traefik:
     ports:
@@ -56,6 +20,7 @@ services:
         constraints:
           - node.role==manager
     volumes:
+      # Mount the Docker socket as read-only so Traefik can listen to events
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - certificates:/certificates
     configs:
@@ -63,12 +28,12 @@ services:
         target: /etc/traefik/traefik.yml
 
   php:
-    image: ${SPIN_IMAGE_DOCKERFILE}
+    image: ${SPIN_IMAGE_DOCKERFILE} # 👈 Change this if you're not using `spin deploy`
     environment:
       PHP_OPCACHE_ENABLE: "1"
-      AUTORUN_ENABLED: "true"
-      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
-      HEALTHCHECK_PATH: "/up"
+      AUTORUN_ENABLED: "true" # 👈 Remove this line if you don't want Laravel Automations
+      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}" # 👈 Remove this if you're not using `spin deploy`
+      HEALTHCHECK_PATH: "/up" # Use Laravel's built-in health route
       SSL_MODE: full
     networks:
       - web-public
@@ -88,7 +53,11 @@ services:
       rollback_config:
         parallelism: 0
         order: stop-first
-      restart_policy: *common-restart-policy
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.my-php-app.rule=Host(`${SPIN_APP_DOMAIN}`)"
@@ -98,10 +67,13 @@ services:
         - "traefik.http.routers.my-php-app.service=my-php-app"
         - "traefik.http.services.my-php-app.loadbalancer.server.port=8443"
         - "traefik.http.services.my-php-app.loadbalancer.server.scheme=https"
+        # Health check
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.path=/up"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.interval=30s"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.timeout=5s"
         - "traefik.http.services.my-php-app.loadbalancer.healthcheck.scheme=https"
+
+        # Horizon subdomain with IP whitelist
         - "traefik.http.routers.horizon.rule=Host(`horizon.${SPIN_APP_DOMAIN}`)"
         - "traefik.http.routers.horizon.entrypoints=websecure"
         - "traefik.http.routers.horizon.tls=true"
@@ -110,7 +82,8 @@ services:
         - "traefik.http.routers.horizon.service=horizon"
         - "traefik.http.services.horizon.loadbalancer.server.port=8443"
         - "traefik.http.services.horizon.loadbalancer.server.scheme=https"
-        - "traefik.http.middlewares.horizon-ipwhitelist.ipwhitelist.sourcerange=${HORIZON_ALLOWED_IPS}"
+
+        # Telescope subdomain with IP whitelist
         - "traefik.http.routers.telescope.rule=Host(`telescope.${SPIN_APP_DOMAIN}`)"
         - "traefik.http.routers.telescope.entrypoints=websecure"
         - "traefik.http.routers.telescope.tls=true"
@@ -119,13 +92,32 @@ services:
         - "traefik.http.routers.telescope.service=telescope"
         - "traefik.http.services.telescope.loadbalancer.server.port=8443"
         - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
-        - "traefik.http.middlewares.telescope-ipwhitelist.ipwhitelist.sourcerange=${TELESCOPE_ALLOWED_IPS}"
+
+        # Pulse subdomain with IP whitelist
+        # Pulse is a Laravel package, route to main PHP app service
         - "traefik.http.routers.pulse.rule=Host(`pulse.${SPIN_APP_DOMAIN}`)"
         - "traefik.http.routers.pulse.entrypoints=websecure"
         - "traefik.http.routers.pulse.tls=true"
         - "traefik.http.routers.pulse.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.pulse.middlewares=pulse-ipwhitelist"
         - "traefik.http.routers.pulse.service=my-php-app"
+
+        # IP Whitelist middleware for Horizon
+        # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
+        - "traefik.http.middlewares.horizon-ipwhitelist.ipwhitelist.sourcerange=${HORIZON_ALLOWED_IPS}"
+
+        # IP Whitelist middleware for Telescope
+        # Reads from TELESCOPE_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
+        - "traefik.http.middlewares.telescope-ipwhitelist.ipwhitelist.sourcerange=${TELESCOPE_ALLOWED_IPS}"
+
+        # IP Whitelist middleware for Pulse
+        # Reads from PULSE_ALLOWED_IPS environment variable (comma-separated)
+        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
+        # Note: /32 means a single IP address (CIDR notation)
         - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
 
   postgres:
@@ -141,7 +133,11 @@ services:
       placement:
         constraints:
           - node.role==manager
-      restart_policy: *common-restart-policy
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_shared:/shared
@@ -158,37 +154,103 @@ services:
         parallelism: 1
         delay: 5s
         order: start-first
-      restart_policy: *common-restart-policy
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
 
   horizon:
-    <<: *laravel-worker
+    image: ${SPIN_IMAGE_DOCKERFILE}
     command: ["php", "/var/www/html/artisan", "horizon"]
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+      AUTORUN_ENABLED: "true"
+      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
+      HEALTHCHECK_PATH: "/up"
+      SSL_MODE: full
+    networks:
+      - web-public
+    volumes:
+      - "storage_private:/var/www/html/storage/app/private/"
+      - "storage_public:/var/www/html/storage/app/public/"
+      - "storage_sessions:/var/www/html/storage/framework/sessions"
+      - "storage_logs:/var/www/html/storage/logs"
+    deploy:
+      update_config:
+        failure_action: rollback
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
 
   pulse:
-    <<: *laravel-worker
+    image: ${SPIN_IMAGE_DOCKERFILE}
     command: ["php", "/var/www/html/artisan", "pulse:check"]
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
     environment:
-      <<: *laravel-worker-env
+      PHP_OPCACHE_ENABLE: "1"
+      AUTORUN_ENABLED: "true"
+      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
+      HEALTHCHECK_PATH: "/up"
+      SSL_MODE: full
       PULSE_SERVER_NAME: "${PULSE_SERVER_NAME:-ubuntu-cx23-2c-2gb-fsn1}"
+    networks:
+      - web-public
+    volumes:
+      - "storage_private:/var/www/html/storage/app/private/"
+      - "storage_public:/var/www/html/storage/app/public/"
+      - "storage_sessions:/var/www/html/storage/framework/sessions"
+      - "storage_logs:/var/www/html/storage/logs"
+    # Override healthcheck: pulse:check is a long-running daemon, not a web server
+    # Use a simple command check that always passes (process is running)
     healthcheck:
       test: ["CMD", "pgrep", "-f", "pulse:check"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    deploy:
+      update_config:
+        failure_action: rollback
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
 
   ssh:
+    # We use an SSH image so we can securely tunnel into the Docker network with
+    # tools like Sequel Pro, TablePlus, Sequel Ace, etc.
+    # Learn more how to secure your tunnel here: https://github.com/serversideup/docker-ssh
     image: serversideup/docker-ssh:v2.0.0
     ports:
       - target: 2222
         published: 2222
         mode: host
     environment:
+      # Change the keys below to your own keys
       AUTHORIZED_KEYS: >
         "# Start Keys
          ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPifqshxdjUmSi8eBV0QfrVw2871N+uhMdra2koE2bDK macbook
-         ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP45ciephKN2JVkJbz4kcIUa4IIwAjEIR/JzUmrwXXif Omarchy
          # End Keys"
+      # You can lock to a specific IP too (AllowUsers tunnel@1.2.3.4)
       ALLOWED_IPS: "AllowUsers tunnel"
     volumes:
       - tunnel_ssh_host_keys:/etc/ssh/ssh_host_keys
@@ -198,7 +260,11 @@ services:
       placement:
         constraints:
           - node.role==manager
-      restart_policy: *common-restart-policy
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 3
+        window: 120s
 
 configs:
   traefik:
