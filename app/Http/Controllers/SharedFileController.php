@@ -3,23 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\SharedFile;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Handles public viewing of shared files
  */
 class SharedFileController extends Controller
 {
+    private const string StorageDisk = 'local';
+
     /**
      * Display a shared file based on its token
      */
-    public function show(string $token): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+    public function show(SharedFile $sharedFile): View|RedirectResponse
     {
-        $sharedFile = SharedFile::where('share_token', $token)->firstOrFail();
-
         // Check if file exists
-        if (! Storage::disk('public')->exists($sharedFile->file_path)) {
+        if (! Storage::disk(self::StorageDisk)->exists($sharedFile->file_path)) {
             abort(404, 'File not found');
         }
 
@@ -31,33 +36,40 @@ class SharedFileController extends Controller
     /**
      * Stream the shared file content (used by <img> and <video> sources).
      */
-    public function file(Request $request, string $token): \Symfony\Component\HttpFoundation\Response
+    public function file(Request $request, SharedFile $sharedFile): \Symfony\Component\HttpFoundation\Response
     {
-        $sharedFile = SharedFile::where('share_token', $token)->firstOrFail();
+        $disk = Storage::disk(self::StorageDisk);
 
-        if (! Storage::disk('public')->exists($sharedFile->file_path)) {
+        if (! $disk->exists($sharedFile->file_path)) {
             abort(404, 'File not found');
         }
 
-        $disk = Storage::disk('public');
         $absolutePath = $disk->path($sharedFile->file_path);
         $size = $disk->size($sharedFile->file_path);
 
+        $disposition = (new ResponseHeaderBag)->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_INLINE,
+            $sharedFile->original_filename,
+            Str::ascii($sharedFile->original_filename)
+        );
+
         $baseHeaders = [
             'Content-Type' => $sharedFile->mime_type,
-            'Content-Disposition' => 'inline; filename="'.$sharedFile->original_filename.'"',
+            'Content-Disposition' => $disposition,
             'Accept-Ranges' => 'bytes',
+            'X-Content-Type-Options' => 'nosniff',
         ];
 
         $range = $request->header('Range');
         if (! $range) {
-            return response()->file($absolutePath, array_merge($baseHeaders, [
+            return response()->file($absolutePath, \array_merge($baseHeaders, [
                 'Content-Length' => (string) $size,
             ]));
         }
 
-        if (! preg_match('/bytes=(\d+)-(\d*)/i', $range, $matches)) {
-            return response()->file($absolutePath, array_merge($baseHeaders, [
+        $matches = [];
+        if (! \preg_match('/bytes=(\d+)-(\d*)/i', $range, $matches)) {
+            return response()->file($absolutePath, \array_merge($baseHeaders, [
                 'Content-Length' => (string) $size,
             ]));
         }
@@ -65,8 +77,8 @@ class SharedFileController extends Controller
         $start = (int) $matches[1];
         $end = $matches[2] !== '' ? (int) $matches[2] : ($size - 1);
 
-        $start = max(0, $start);
-        $end = min($size - 1, $end);
+        $start = \max(0, $start);
+        $end = \min($size - 1, $end);
 
         if ($start > $end) {
             abort(416, 'Requested Range Not Satisfiable');
@@ -75,31 +87,31 @@ class SharedFileController extends Controller
         $length = ($end - $start) + 1;
 
         $stream = function () use ($absolutePath, $start, $length): void {
-            $handle = fopen($absolutePath, 'rb');
+            $handle = \fopen($absolutePath, 'rb');
             if ($handle === false) {
                 return;
             }
 
-            fseek($handle, $start);
+            \fseek($handle, $start);
 
             $remaining = $length;
-            while ($remaining > 0 && ! feof($handle)) {
-                $chunkSize = min(1024 * 1024, $remaining);
-                $buffer = fread($handle, $chunkSize);
+            while ($remaining > 0 && ! \feof($handle)) {
+                $chunkSize = \min(1024 * 1024, $remaining);
+                $buffer = \fread($handle, $chunkSize);
                 if ($buffer === false) {
                     break;
                 }
 
                 echo $buffer;
-                flush();
+                \flush();
 
-                $remaining -= strlen($buffer);
+                $remaining -= \strlen($buffer);
             }
 
-            fclose($handle);
+            \fclose($handle);
         };
 
-        return response()->stream($stream, 206, array_merge($baseHeaders, [
+        return response()->stream($stream, 206, \array_merge($baseHeaders, [
             'Content-Length' => (string) $length,
             'Content-Range' => "bytes {$start}-{$end}/{$size}",
         ]));
@@ -108,14 +120,12 @@ class SharedFileController extends Controller
     /**
      * Download the shared file.
      */
-    public function download(string $token): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function download(SharedFile $sharedFile): StreamedResponse
     {
-        $sharedFile = SharedFile::where('share_token', $token)->firstOrFail();
-
-        if (! Storage::disk('public')->exists($sharedFile->file_path)) {
+        if (! Storage::disk(self::StorageDisk)->exists($sharedFile->file_path)) {
             abort(404, 'File not found');
         }
 
-        return Storage::disk('public')->download($sharedFile->file_path, $sharedFile->original_filename);
+        return Storage::disk(self::StorageDisk)->download($sharedFile->file_path, $sharedFile->original_filename);
     }
 }

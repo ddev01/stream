@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
  */
 class SharedFile extends Model
 {
+    private const int ShareTokenLength = 64;
+
     protected $fillable = [
         'user_id',
         'original_filename',
@@ -32,6 +34,14 @@ class SharedFile extends Model
     }
 
     /**
+     * Use share tokens for route model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'share_token';
+    }
+
+    /**
      * Get the user who uploaded this file
      */
     public function user(): BelongsTo
@@ -45,7 +55,7 @@ class SharedFile extends Model
     public static function generateShareToken(): string
     {
         do {
-            $token = Str::random(32);
+            $token = Str::random(self::ShareTokenLength);
         } while (self::where('share_token', $token)->exists());
 
         return $token;
@@ -56,7 +66,7 @@ class SharedFile extends Model
      */
     public function getShareUrlAttribute(): string
     {
-        return route('shared-files.show', ['token' => $this->share_token]);
+        return route('shared-files.show', $this);
     }
 
     /**
@@ -64,7 +74,7 @@ class SharedFile extends Model
      */
     public function getFileUrlAttribute(): string
     {
-        return route('shared-files.file', ['token' => $this->share_token]);
+        return route('shared-files.file', $this);
     }
 
     /**
@@ -72,7 +82,7 @@ class SharedFile extends Model
      */
     public function getDownloadUrlAttribute(): string
     {
-        return route('shared-files.download', ['token' => $this->share_token]);
+        return route('shared-files.download', $this);
     }
 
     /**

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 test('shared file endpoint supports byte ranges for video streaming', function () {
-    Storage::fake('public');
+    Storage::fake('local');
 
     // Ensure the share page can be accessed without auth, but uploads are admin-only.
     $user = User::factory()->create();
@@ -24,7 +24,7 @@ test('shared file endpoint supports byte ranges for video streaming', function (
     $path = 'shared-files/test.mp4';
     $contents = str_repeat('a', 1024);
 
-    Storage::disk('public')->put($path, $contents);
+    Storage::disk('local')->put($path, $contents);
 
     $sharedFile = SharedFile::create([
         'user_id' => $user->id,
@@ -36,7 +36,7 @@ test('shared file endpoint supports byte ranges for video streaming', function (
         'file_path' => $path,
     ]);
 
-    $response = $this->get(route('shared-files.file', ['token' => $sharedFile->share_token]), [
+    $response = $this->get(route('shared-files.file', $sharedFile), [
         'Range' => 'bytes=0-99',
     ]);
 

@@ -38,9 +38,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('users/{twitchUser}', [UserController::class, 'show'])->name('users.show');
 
 // Public shared file route
-Route::get('/share/{token}', [SharedFileController::class, 'show'])->name('shared-files.show');
-Route::get('/share/{token}/file', [SharedFileController::class, 'file'])->name('shared-files.file');
-Route::get('/share/{token}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
+Route::get('/share/{sharedFile}', [SharedFileController::class, 'show'])->name('shared-files.show');
+Route::get('/share/{sharedFile}/file', [SharedFileController::class, 'file'])->name('shared-files.file');
+Route::get('/share/{sharedFile}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');

@@ -14,7 +14,7 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 test('admin can upload a shared file', function () {
-    Storage::fake('public');
+    Storage::fake('local');
 
     config(['admin.twitch_ids' => ['123']]);
 
@@ -35,7 +35,7 @@ test('admin can upload a shared file', function () {
     expect($sharedFile->original_filename)->toBe('video.mp4');
     expect($sharedFile->share_token)->not->toBeEmpty();
 
-    Storage::disk('public')->assertExists($sharedFile->file_path);
+    Storage::disk('local')->assertExists($sharedFile->file_path);
 });
 
 test('non-admin cannot access file sharing component', function () {
