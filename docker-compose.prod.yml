@@ -127,7 +127,9 @@ services:
         - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
 
         # Large file upload middleware (6GB limit)
-        - "traefik.http.middlewares.large-upload.bodylimit.maxrequestbody=6442450944"
+        # Use Traefik's built-in buffering middleware to allow large request bodies.
+        # NOTE: Middleware keys must be valid or Traefik will ignore the router and you will get a 404.
+        - "traefik.http.middlewares.large-upload.buffering.maxRequestBodyBytes=6442450944"
         - "traefik.http.routers.my-php-app.middlewares=large-upload"
 
   postgres:
