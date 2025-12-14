@@ -35,6 +35,12 @@ services:
       APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}" # 👈 Remove this if you're not using `spin deploy`
       HEALTHCHECK_PATH: "/up" # Use Laravel's built-in health route
       SSL_MODE: full
+      # Large file upload configuration
+      UPLOAD_MAX_FILESIZE: "5G"
+      POST_MAX_SIZE: "6G"
+      MAX_EXECUTION_TIME: "3600"
+      MAX_INPUT_TIME: "3600"
+      MEMORY_LIMIT: "2G"
     networks:
       - web-public
     volumes:
@@ -119,6 +125,10 @@ services:
         # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
         # Note: /32 means a single IP address (CIDR notation)
         - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
+
+        # Large file upload middleware (6GB limit)
+        - "traefik.http.middlewares.large-upload.bodylimit.maxrequestbody=6442450944"
+        - "traefik.http.routers.my-php-app.middlewares=large-upload"
 
   postgres:
     image: postgres:16-alpine
