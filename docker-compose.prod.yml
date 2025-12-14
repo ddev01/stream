@@ -36,11 +36,13 @@ services:
       HEALTHCHECK_PATH: "/up" # Use Laravel's built-in health route
       SSL_MODE: full
       # Large file upload configuration
-      UPLOAD_MAX_FILESIZE: "5G"
-      POST_MAX_SIZE: "6G"
-      MAX_EXECUTION_TIME: "3600"
-      MAX_INPUT_TIME: "3600"
-      MEMORY_LIMIT: "2G"
+      # Server Side Up PHP image uses these specific environment variable names
+      NGINX_CLIENT_MAX_BODY_SIZE: "6g"
+      PHP_POST_MAX_SIZE: "6G"
+      PHP_UPLOAD_MAX_FILE_SIZE: "5G"
+      PHP_MAX_EXECUTION_TIME: "3600"
+      PHP_MAX_INPUT_TIME: "3600"
+      PHP_MEMORY_LIMIT: "2G"
     networks:
       - web-public
     volumes:
