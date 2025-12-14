@@ -103,6 +103,9 @@ class FileSharing extends Component
             // Generate share URL
             $this->shareUrl = $sharedFile->share_url;
 
+            // Clean up temporary file to prevent double storage
+            $uploadedFile->delete();
+
             // Reset file
             $this->file = null;
         } catch (ValidationException $e) {
