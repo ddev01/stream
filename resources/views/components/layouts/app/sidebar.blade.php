@@ -44,6 +44,7 @@
 						<flux:navlist.item href="{{ config('horizon.domain') ? 'https://' . config('horizon.domain') : url('/' . config('horizon.path', 'horizon')) }}" icon="squares-2x2" :current="request()->getHost() === config('horizon.domain')">{{ __('Horizon') }}</flux:navlist.item>
 						<flux:navlist.item href="{{ config('telescope.domain') ? 'https://' . config('telescope.domain') : url('/' . config('telescope.path', 'telescope')) }}" icon="magnifying-glass" :current="request()->getHost() === config('telescope.domain')">{{ __('Telescope') }}</flux:navlist.item>
 						<flux:navlist.item href="https://v-a9.sentry.io/issues/" icon="exclamation-triangle" target="_blank">{{ __('Sentry') }}</flux:navlist.item>
+						<flux:navlist.item :href="route('admin.file-sharing')" icon="paper-clip" :current="request()->routeIs('admin.file-sharing')" wire:navigate>{{ __('File Sharing') }}</flux:navlist.item>
 					</flux:navlist.group>
 				</flux:navlist>
 			@endif

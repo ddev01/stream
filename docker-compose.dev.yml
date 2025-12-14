@@ -29,6 +29,11 @@ services:
     <<: *laravel-dev-base
     depends_on:
       - traefik
+    environment:
+      NGINX_CLIENT_MAX_BODY_SIZE: "6g"
+      PHP_POST_MAX_SIZE: "6G"
+      PHP_UPLOAD_MAX_FILE_SIZE: "6G"
+      PHP_MAX_EXECUTION_TIME: "7200"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laravel.rule=Host(`localhost`) || HostRegexp(`.*\\.ngrok-free\\.dev`)"

@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\SharedFile;
+use App\Models\TwitchUser;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+
+uses(RefreshDatabase::class);
+
+test('shared file endpoint supports byte ranges for video streaming', function () {
+    Storage::fake('public');
+
+    // Ensure the share page can be accessed without auth, but uploads are admin-only.
+    $user = User::factory()->create();
+    TwitchUser::factory()->create([
+        'user_id' => $user->id,
+        'twitch_id' => '123',
+    ]);
+
+    $token = 'testtoken123';
+    $path = 'shared-files/test.mp4';
+    $contents = str_repeat('a', 1024);
+
+    Storage::disk('public')->put($path, $contents);
+
+    $sharedFile = SharedFile::create([
+        'user_id' => $user->id,
+        'original_filename' => 'test.mp4',
+        'stored_filename' => 'test.mp4',
+        'share_token' => $token,
+        'mime_type' => 'video/mp4',
+        'file_size' => 1024,
+        'file_path' => $path,
+    ]);
+
+    $response = $this->get(route('shared-files.file', ['token' => $sharedFile->share_token]), [
+        'Range' => 'bytes=0-99',
+    ]);
+
+    $response->assertStatus(206);
+    $response->assertHeader('Accept-Ranges', 'bytes');
+    $response->assertHeader('Content-Range', 'bytes 0-99/1024');
+
+    $content = $response->streamedContent();
+    expect(strlen($content))->toBe(100);
+});
