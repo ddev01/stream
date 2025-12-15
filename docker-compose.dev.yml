@@ -46,6 +46,8 @@ services:
     volumes: *laravel-dev-volumes
     working_dir: /var/www/html
     networks: *development-network
+    ports:
+      - "5173:5173"
 
   mailpit:
     image: axllent/mailpit
