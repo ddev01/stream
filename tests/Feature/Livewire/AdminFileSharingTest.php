@@ -51,3 +51,4 @@ test('non-admin cannot access file sharing component', function () {
         ->test(FileSharing::class)
         ->assertStatus(403);
 });
+

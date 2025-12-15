@@ -47,3 +47,4 @@ test('shared file endpoint supports byte ranges for video streaming', function (
     $content = $response->streamedContent();
     expect(strlen($content))->toBe(100);
 });
+
