@@ -42,6 +42,22 @@ Route::get('/share/{sharedFile}', [SharedFileController::class, 'show'])->name('
 Route::get('/share/{sharedFile}/file', [SharedFileController::class, 'file'])->name('shared-files.file');
 Route::get('/share/{sharedFile}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
 
+// Vite proxy for development hot reload
+if (app()->environment('local')) {
+    Route::get('/vite-assets/{path}', function ($path) {
+        $viteUrl = "http://stream-node-run-" . exec('docker ps --filter "name=stream-node-run" --format "{{.Names}}" | head -1') . ":5173/" . $path;
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::get($viteUrl);
+            return response($response->body(), $response->status())
+                ->header('Content-Type', $response->header('Content-Type'))
+                ->header('Cache-Control', 'no-cache');
+        } catch (\Exception $e) {
+            return response('Vite asset not found', 404);
+        }
+    })->where('path', '.*');
+}
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
