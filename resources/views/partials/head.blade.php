@@ -4,11 +4,12 @@
 <title>{{ $title ?? config('app.name') }}</title>
 
 {{-- <link rel="icon" href="/favicon.ico" sizes="any"> --}}
-<link rel="icon" href="{{ asset('assets/icons/cat.webp') }}" type="image/webp">
-<link rel="apple-touch-icon" href="{{ asset('assets/icons/cat.webp') }}" type="image/webp">
+<link type="image/webp" href="{{ asset('assets/icons/cat.webp') }}" rel="icon">
+<link type="image/webp" href="{{ asset('assets/icons/cat.webp') }}" rel="apple-touch-icon">
 
-<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net" rel="preconnect">
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+@filamentStyles(['filament/support', 'filament/tables', 'filament/filament'])
