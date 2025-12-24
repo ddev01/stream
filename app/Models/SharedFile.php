@@ -21,6 +21,7 @@ class SharedFile extends Model
         'mime_type',
         'file_size',
         'file_path',
+        'expires_at',
     ];
 
     /**
@@ -30,6 +31,7 @@ class SharedFile extends Model
     {
         return [
             'file_size' => 'integer',
+            'expires_at' => 'datetime',
         ];
     }
 
@@ -116,5 +118,29 @@ class SharedFile extends Model
         }
 
         return \round($bytes, 2).' '.$units[$i];
+    }
+
+    /**
+     * Check if this file has expired
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    /**
+     * Get human-readable time remaining label
+     */
+    public function getTimeRemainingLabelAttribute(): string
+    {
+        if ($this->expires_at === null) {
+            return 'Permanent';
+        }
+
+        if ($this->isExpired()) {
+            return 'Expired';
+        }
+
+        return $this->expires_at->diffForHumans();
     }
 }
