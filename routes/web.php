@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwitchAuthController;
+use App\Http\Controllers\Dev\ViteAssetsController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\SharedFileController;
@@ -44,18 +45,8 @@ Route::get('/share/{sharedFile}/download', [SharedFileController::class, 'downlo
 
 // Vite proxy for development hot reload
 if (app()->environment('local')) {
-    Route::get('/vite-assets/{path}', function ($path) {
-        $viteUrl = "http://stream-node-run-" . exec('docker ps --filter "name=stream-node-run" --format "{{.Names}}" | head -1') . ":5173/" . $path;
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::get($viteUrl);
-            return response($response->body(), $response->status())
-                ->header('Content-Type', $response->header('Content-Type'))
-                ->header('Cache-Control', 'no-cache');
-        } catch (\Exception $e) {
-            return response('Vite asset not found', 404);
-        }
-    })->where('path', '.*');
+    Route::get('/vite-assets/{path}', ViteAssetsController::class)
+        ->where('path', '.*');
 }
 
 Route::middleware(['auth'])->group(function () {
@@ -68,4 +59,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('admin/file-sharing', function () {
         return view('admin.file-sharing');
     })->name('admin.file-sharing');
+
+    Route::get('admin/my-uploads', function () {
+        return view('admin.my-uploads');
+    })->name('admin.my-uploads');
 });

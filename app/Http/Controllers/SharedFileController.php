@@ -19,14 +19,25 @@ class SharedFileController extends Controller
     private const string StorageDisk = 'local';
 
     /**
+     * Ensure a shared file is accessible (not expired and present on disk).
+     */
+    private function ensureAccessible(SharedFile $sharedFile): void
+    {
+        if ($sharedFile->isExpired()) {
+            abort(410, 'File has expired');
+        }
+
+        if (! Storage::disk(self::StorageDisk)->exists($sharedFile->file_path)) {
+            abort(404, 'File not found');
+        }
+    }
+
+    /**
      * Display a shared file based on its token
      */
     public function show(SharedFile $sharedFile): View|RedirectResponse
     {
-        // Check if file exists
-        if (! Storage::disk(self::StorageDisk)->exists($sharedFile->file_path)) {
-            abort(404, 'File not found');
-        }
+        $this->ensureAccessible($sharedFile);
 
         return view('shared-files.show', [
             'sharedFile' => $sharedFile,
@@ -38,11 +49,9 @@ class SharedFileController extends Controller
      */
     public function file(Request $request, SharedFile $sharedFile): \Symfony\Component\HttpFoundation\Response
     {
-        $disk = Storage::disk(self::StorageDisk);
+        $this->ensureAccessible($sharedFile);
 
-        if (! $disk->exists($sharedFile->file_path)) {
-            abort(404, 'File not found');
-        }
+        $disk = Storage::disk(self::StorageDisk);
 
         $absolutePath = $disk->path($sharedFile->file_path);
         $size = $disk->size($sharedFile->file_path);
@@ -122,9 +131,7 @@ class SharedFileController extends Controller
      */
     public function download(SharedFile $sharedFile): StreamedResponse
     {
-        if (! Storage::disk(self::StorageDisk)->exists($sharedFile->file_path)) {
-            abort(404, 'File not found');
-        }
+        $this->ensureAccessible($sharedFile);
 
         return Storage::disk(self::StorageDisk)->download($sharedFile->file_path, $sharedFile->original_filename);
     }
