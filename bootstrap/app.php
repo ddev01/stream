@@ -17,11 +17,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'dev.api' => \App\Http\Middleware\DevelopmentApiAuth::class,
         ]);
 
+        // Allow the browser to set a plain (unencrypted) timezone cookie so we can
+        // render datetimes in the viewer's timezone (guests included).
+        $middleware->encryptCookies(except: [
+            'timezone',
+        ]);
+
         // Redirect guests to /login instead of route('login')
         $middleware->redirectGuestsTo('/login');
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        if (env('APP_ENV') === 'production') {
+        if (app()->environment('production')) {
             Integration::handles($exceptions);
         }
     })->create();
