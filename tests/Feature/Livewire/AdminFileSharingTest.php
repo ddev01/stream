@@ -8,6 +8,7 @@ use App\Models\TwitchUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -34,8 +35,63 @@ test('admin can upload a shared file', function () {
     expect($sharedFile)->not->toBeNull();
     expect($sharedFile->original_filename)->toBe('video.mp4');
     expect($sharedFile->share_token)->not->toBeEmpty();
+    expect($sharedFile->expires_at)->not->toBeNull();
+    expect($sharedFile->expires_at->isFuture())->toBeTrue();
 
     Storage::disk('local')->assertExists($sharedFile->file_path);
+});
+
+test('admin can set expiry preset when uploading', function () {
+    Storage::fake('local');
+
+    config(['admin.twitch_ids' => ['123']]);
+
+    Carbon::setTestNow(Carbon::parse('2025-12-24 00:00:00', 'UTC'));
+
+    $user = User::factory()->create();
+    TwitchUser::factory()->create([
+        'user_id' => $user->id,
+        'twitch_id' => '123',
+    ]);
+
+    try {
+        Livewire::actingAs($user)
+            ->test(FileSharing::class)
+            ->set('expiryPreset', '7d')
+            ->set('file', UploadedFile::fake()->create('video.mp4', 10, 'video/mp4'))
+            ->assertSet('shareUrl', fn ($url) => is_string($url) && $url !== '');
+
+        $sharedFile = SharedFile::query()->first();
+
+        expect($sharedFile)->not->toBeNull();
+        expect($sharedFile->expires_at)->not->toBeNull();
+        expect($sharedFile->expires_at?->equalTo(Carbon::parse('2025-12-31 00:00:00', 'UTC')))->toBeTrue();
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+test('admin can set permanent expiry when uploading', function () {
+    Storage::fake('local');
+
+    config(['admin.twitch_ids' => ['123']]);
+
+    $user = User::factory()->create();
+    TwitchUser::factory()->create([
+        'user_id' => $user->id,
+        'twitch_id' => '123',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(FileSharing::class)
+        ->set('expiryPreset', 'permanent')
+        ->set('file', UploadedFile::fake()->create('video.mp4', 10, 'video/mp4'))
+        ->assertSet('shareUrl', fn ($url) => is_string($url) && $url !== '');
+
+    $sharedFile = SharedFile::query()->first();
+
+    expect($sharedFile)->not->toBeNull();
+    expect($sharedFile->expires_at)->toBeNull();
 });
 
 test('non-admin cannot access file sharing component', function () {
@@ -51,4 +107,3 @@ test('non-admin cannot access file sharing component', function () {
         ->test(FileSharing::class)
         ->assertStatus(403);
 });
-

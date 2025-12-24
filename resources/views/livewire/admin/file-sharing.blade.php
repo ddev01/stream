@@ -50,6 +50,19 @@
         }
     }
 }" x-on:dragover.prevent="isDragging = true" x-on:dragleave.prevent="isDragging = false" x-on:drop.prevent="handleDrop($event)">
+				<flux:field :label="__('Expiry Duration')" wire:ignore>
+					<flux:select wire:model.live="expiryPreset">
+						@foreach ($this->expiryOptions as $value => $label)
+							<option value="{{ $value }}">
+								{{ __($label) }}@if ($value === '3d'){{ __(' (default)') }}@endif
+							</option>
+						@endforeach
+					</flux:select>
+					<flux:description class="mt-2">
+						{{ __('Files will be automatically deleted after the selected duration.') }}
+					</flux:description>
+				</flux:field>
+
 				<flux:field :label="__('Select File')">
 					<div class="relative">
 						<div class="rounded-lg border-2 border-dashed transition-colors" :class="isDragging ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-zinc-300 dark:border-zinc-600'">
@@ -132,4 +145,3 @@
 		</div>
 	</div>
 </section>
-
