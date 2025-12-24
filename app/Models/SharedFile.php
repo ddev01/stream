@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -142,5 +143,34 @@ class SharedFile extends Model
         }
 
         return $this->expires_at->diffForHumans();
+    }
+
+    /**
+     * Get a compact time remaining label for admin tables (e.g. "2d 23h").
+     */
+    public function getTimeRemainingShortLabelAttribute(): string
+    {
+        if ($this->expires_at === null) {
+            return 'Permanent';
+        }
+
+        if ($this->isExpired()) {
+            return 'Expired';
+        }
+
+        $seconds = now('UTC')->diffInSeconds($this->expires_at, false);
+        if ($seconds <= 0) {
+            return 'Expired';
+        }
+
+        $interval = CarbonInterval::seconds($seconds)->cascade();
+
+        $label = $interval->forHumans([
+            'short' => true,
+            'parts' => 2,
+            'join' => true,
+        ]);
+
+        return \preg_replace('/\s+and\s+/i', ' ', $label) ?? $label;
     }
 }
