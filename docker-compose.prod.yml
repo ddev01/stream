@@ -35,14 +35,6 @@ services:
       APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}" # 👈 Remove this if you're not using `spin deploy`
       HEALTHCHECK_PATH: "/up" # Use Laravel's built-in health route
       SSL_MODE: full
-      # Large file upload configuration
-      # Server Side Up PHP image uses these specific environment variable names
-      NGINX_CLIENT_MAX_BODY_SIZE: "6g"
-      PHP_POST_MAX_SIZE: "6G"
-      PHP_UPLOAD_MAX_FILE_SIZE: "5G"
-      PHP_MAX_EXECUTION_TIME: "3600"
-      PHP_MAX_INPUT_TIME: "3600"
-      PHP_MEMORY_LIMIT: "2G"
     networks:
       - web-public
     volumes:
@@ -68,18 +60,18 @@ services:
         window: 120s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.my-php-app.rule=Host(`${SPIN_APP_DOMAIN}`)"
-        - "traefik.http.routers.my-php-app.entrypoints=websecure"
-        - "traefik.http.routers.my-php-app.tls=true"
-        - "traefik.http.routers.my-php-app.tls.certresolver=letsencryptresolver"
-        - "traefik.http.routers.my-php-app.service=my-php-app"
-        - "traefik.http.services.my-php-app.loadbalancer.server.port=8443"
-        - "traefik.http.services.my-php-app.loadbalancer.server.scheme=https"
+        - "traefik.http.routers.stream.rule=Host(`${SPIN_APP_DOMAIN}`)"
+        - "traefik.http.routers.stream.entrypoints=websecure"
+        - "traefik.http.routers.stream.tls=true"
+        - "traefik.http.routers.stream.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.stream.service=stream"
+        - "traefik.http.services.stream.loadbalancer.server.port=8443"
+        - "traefik.http.services.stream.loadbalancer.server.scheme=https"
         # Health check
-        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.path=/up"
-        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.interval=30s"
-        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.timeout=5s"
-        - "traefik.http.services.my-php-app.loadbalancer.healthcheck.scheme=https"
+        - "traefik.http.services.stream.loadbalancer.healthcheck.path=/up"
+        - "traefik.http.services.stream.loadbalancer.healthcheck.interval=30s"
+        - "traefik.http.services.stream.loadbalancer.healthcheck.timeout=5s"
+        - "traefik.http.services.stream.loadbalancer.healthcheck.scheme=https"
 
         # Horizon subdomain with IP whitelist
         - "traefik.http.routers.horizon.rule=Host(`horizon.${SPIN_APP_DOMAIN}`)"
@@ -108,7 +100,7 @@ services:
         - "traefik.http.routers.pulse.tls=true"
         - "traefik.http.routers.pulse.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.pulse.middlewares=pulse-ipwhitelist"
-        - "traefik.http.routers.pulse.service=my-php-app"
+        - "traefik.http.routers.pulse.service=stream"
 
         # IP Whitelist middleware for Horizon
         # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
@@ -127,12 +119,6 @@ services:
         # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
         # Note: /32 means a single IP address (CIDR notation)
         - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
-
-        # Large file upload middleware (6GB limit)
-        # Use Traefik's built-in buffering middleware to allow large request bodies.
-        # NOTE: Middleware keys must be valid or Traefik will ignore the router and you will get a 404.
-        - "traefik.http.middlewares.large-upload.buffering.maxRequestBodyBytes=6442450944"
-        - "traefik.http.routers.my-php-app.middlewares=large-upload"
 
   postgres:
     image: postgres:16-alpine

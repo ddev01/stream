@@ -29,11 +29,6 @@ services:
     <<: *laravel-dev-base
     depends_on:
       - traefik
-    environment:
-      NGINX_CLIENT_MAX_BODY_SIZE: "6g"
-      PHP_POST_MAX_SIZE: "6G"
-      PHP_UPLOAD_MAX_FILE_SIZE: "6G"
-      PHP_MAX_EXECUTION_TIME: "7200"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laravel.rule=Host(`localhost`) || HostRegexp(`.*\\.ngrok-free\\.dev`)"
@@ -51,12 +46,6 @@ services:
     command: sh -c "npm install && npm run dev"
     environment:
       - NODE_ENV=development
-
-  mailpit:
-    image: axllent/mailpit
-    networks: *development-network
-    ports:
-      - "8025:8025"
 
   postgres:
     image: postgres:16-alpine
@@ -80,7 +69,7 @@ services:
       start_period: 10s
 
   redis:
-    command: "redis-server --appendonly yes --requirepass redispassword"
+    command: "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}"
     volumes:
       - ./.infrastructure/volume_data/redis/data:/data
     networks: *development-network
