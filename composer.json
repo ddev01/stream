@@ -10,7 +10,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "filament/tables": "*",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.38",
         "laravel/pulse": "^1.4",
