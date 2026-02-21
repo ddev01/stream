@@ -6,7 +6,6 @@ use App\Http\Controllers\Auth\TwitchAuthController;
 use App\Http\Controllers\Dev\ViteAssetsController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\SharedFileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -38,11 +37,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // User routes
 Route::get('users/{twitchUser}', [UserController::class, 'show'])->name('users.show');
 
-// Public shared file route
-Route::get('/share/{sharedFile}', [SharedFileController::class, 'show'])->name('shared-files.show');
-Route::get('/share/{sharedFile}/file', [SharedFileController::class, 'file'])->name('shared-files.file');
-Route::get('/share/{sharedFile}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
-
 // Vite proxy for development hot reload
 if (app()->environment('local')) {
     Route::get('/vite-assets/{path}', ViteAssetsController::class)
@@ -54,13 +48,4 @@ Route::middleware(['auth'])->group(function () {
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
-
-    // Admin routes (admin check is done in the component)
-    Route::get('admin/file-sharing', function () {
-        return view('admin.file-sharing');
-    })->name('admin.file-sharing');
-
-    Route::get('admin/my-uploads', function () {
-        return view('admin.my-uploads');
-    })->name('admin.my-uploads');
 });
