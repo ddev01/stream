@@ -1,32 +1,4 @@
 services:
-  traefik:
-    ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
-      - target: 443
-        published: 443
-        protocol: tcp
-        mode: host
-    networks:
-      - web-public
-    deploy:
-      update_config:
-        parallelism: 1
-        delay: 5s
-        order: stop-first
-      placement:
-        constraints:
-          - node.role==manager
-    volumes:
-      # Mount the Docker socket as read-only so Traefik can listen to events
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - certificates:/certificates
-    configs:
-      - source: traefik
-        target: /etc/traefik/traefik.yml
-
   php:
     image: ${SPIN_IMAGE_DOCKERFILE} # 👈 Change this if you're not using `spin deploy`
     environment:
@@ -35,7 +7,10 @@ services:
       APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}" # 👈 Remove this if you're not using `spin deploy`
       HEALTHCHECK_PATH: "/up" # Use Laravel's built-in health route
       SSL_MODE: full
+      DB_HOST: stream-postgres
+      REDIS_HOST: stream-redis
     networks:
+      - default
       - web-public
     volumes:
       - "storage_private:/var/www/html/storage/app/private/"
@@ -65,42 +40,32 @@ services:
         - "traefik.http.routers.stream.tls=true"
         - "traefik.http.routers.stream.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.stream.service=stream"
+        # serversideup/php listens on 8080 (http) and 8443 (https).
+        # With SSL_MODE=full it redirects http→https, so we route to https/8443.
         - "traefik.http.services.stream.loadbalancer.server.port=8443"
         - "traefik.http.services.stream.loadbalancer.server.scheme=https"
-        # Health check
         - "traefik.http.services.stream.loadbalancer.healthcheck.path=/up"
-        - "traefik.http.services.stream.loadbalancer.healthcheck.interval=30s"
+        - "traefik.http.services.stream.loadbalancer.healthcheck.interval=10s"
         - "traefik.http.services.stream.loadbalancer.healthcheck.timeout=5s"
         - "traefik.http.services.stream.loadbalancer.healthcheck.scheme=https"
 
-        # Horizon subdomain with IP whitelist
-        - "traefik.http.routers.horizon.rule=Host(`horizon.${SPIN_APP_DOMAIN}`)"
+        # Horizon path-based with IP whitelist (matches /horizon, /horizon/*)
+        - "traefik.http.routers.horizon.rule=Host(`${SPIN_APP_DOMAIN}`) && PathPrefix(`/horizon`)"
+        - "traefik.http.routers.horizon.priority=100"
         - "traefik.http.routers.horizon.entrypoints=websecure"
         - "traefik.http.routers.horizon.tls=true"
         - "traefik.http.routers.horizon.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.horizon.middlewares=horizon-ipwhitelist"
-        - "traefik.http.routers.horizon.service=horizon"
-        - "traefik.http.services.horizon.loadbalancer.server.port=8443"
-        - "traefik.http.services.horizon.loadbalancer.server.scheme=https"
+        - "traefik.http.routers.horizon.service=stream"
 
-        # Telescope subdomain with IP whitelist
-        - "traefik.http.routers.telescope.rule=Host(`telescope.${SPIN_APP_DOMAIN}`)"
+        # Telescope path-based with IP whitelist (matches /telescope, /telescope/*)
+        - "traefik.http.routers.telescope.rule=Host(`${SPIN_APP_DOMAIN}`) && PathPrefix(`/telescope`)"
+        - "traefik.http.routers.telescope.priority=100"
         - "traefik.http.routers.telescope.entrypoints=websecure"
         - "traefik.http.routers.telescope.tls=true"
         - "traefik.http.routers.telescope.tls.certresolver=letsencryptresolver"
         - "traefik.http.routers.telescope.middlewares=telescope-ipwhitelist"
-        - "traefik.http.routers.telescope.service=telescope"
-        - "traefik.http.services.telescope.loadbalancer.server.port=8443"
-        - "traefik.http.services.telescope.loadbalancer.server.scheme=https"
-
-        # Pulse subdomain with IP whitelist
-        # Pulse is a Laravel package, route to main PHP app service
-        - "traefik.http.routers.pulse.rule=Host(`pulse.${SPIN_APP_DOMAIN}`)"
-        - "traefik.http.routers.pulse.entrypoints=websecure"
-        - "traefik.http.routers.pulse.tls=true"
-        - "traefik.http.routers.pulse.tls.certresolver=letsencryptresolver"
-        - "traefik.http.routers.pulse.middlewares=pulse-ipwhitelist"
-        - "traefik.http.routers.pulse.service=stream"
+        - "traefik.http.routers.telescope.service=stream"
 
         # IP Whitelist middleware for Horizon
         # Reads from HORIZON_ALLOWED_IPS environment variable (comma-separated)
@@ -114,16 +79,12 @@ services:
         # Note: /32 means a single IP address (CIDR notation)
         - "traefik.http.middlewares.telescope-ipwhitelist.ipwhitelist.sourcerange=${TELESCOPE_ALLOWED_IPS}"
 
-        # IP Whitelist middleware for Pulse
-        # Reads from PULSE_ALLOWED_IPS environment variable (comma-separated)
-        # Format: "1.2.3.4/32,5.6.7.8/32" or single IP "1.2.3.4/32"
-        # Note: /32 means a single IP address (CIDR notation)
-        - "traefik.http.middlewares.pulse-ipwhitelist.ipwhitelist.sourcerange=${PULSE_ALLOWED_IPS}"
-
   postgres:
     image: postgres:16-alpine
     networks:
-      - web-public
+      default:
+        aliases:
+          - stream-postgres
     environment:
       POSTGRES_DB: "${DB_DATABASE}"
       POSTGRES_USER: "${DB_USERNAME}"
@@ -147,7 +108,9 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - web-public
+      default:
+        aliases:
+          - stream-redis
     deploy:
       replicas: 1
       update_config:
@@ -171,55 +134,13 @@ services:
       APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
       HEALTHCHECK_PATH: "/up"
       SSL_MODE: full
-    networks:
-      - web-public
+      DB_HOST: stream-postgres
+      REDIS_HOST: stream-redis
     volumes:
       - "storage_private:/var/www/html/storage/app/private/"
       - "storage_public:/var/www/html/storage/app/public/"
       - "storage_sessions:/var/www/html/storage/framework/sessions"
       - "storage_logs:/var/www/html/storage/logs"
-    deploy:
-      update_config:
-        failure_action: rollback
-        parallelism: 1
-        delay: 5s
-        order: stop-first
-      rollback_config:
-        parallelism: 0
-        order: stop-first
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 3
-        window: 120s
-
-  pulse:
-    image: ${SPIN_IMAGE_DOCKERFILE}
-    command: ["php", "/var/www/html/artisan", "pulse:check"]
-    stop_grace_period: 30s
-    stop_signal: SIGTERM
-    environment:
-      PHP_OPCACHE_ENABLE: "1"
-      AUTORUN_ENABLED: "true"
-      APP_ENV: "${SPIN_DEPLOYMENT_ENVIRONMENT}"
-      HEALTHCHECK_PATH: "/up"
-      SSL_MODE: full
-      PULSE_SERVER_NAME: "${PULSE_SERVER_NAME:-ubuntu-cx23-2c-2gb-fsn1}"
-    networks:
-      - web-public
-    volumes:
-      - "storage_private:/var/www/html/storage/app/private/"
-      - "storage_public:/var/www/html/storage/app/public/"
-      - "storage_sessions:/var/www/html/storage/framework/sessions"
-      - "storage_logs:/var/www/html/storage/logs"
-    # Override healthcheck: pulse:check is a long-running daemon, not a web server
-    # Use a simple command check that always passes (process is running)
-    healthcheck:
-      test: ["CMD", "pgrep", "-f", "pulse:check"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     deploy:
       update_config:
         failure_action: rollback
@@ -254,8 +175,6 @@ services:
       ALLOWED_IPS: "AllowUsers tunnel"
     volumes:
       - tunnel_ssh_host_keys:/etc/ssh/ssh_host_keys
-    networks:
-      - web-public
     deploy:
       placement:
         constraints:
@@ -266,13 +185,7 @@ services:
         max_attempts: 3
         window: 120s
 
-configs:
-  traefik:
-    name: "traefik-${SPIN_MD5_HASH_TRAEFIK_YML}.yml"
-    file: ./.infrastructure/conf/traefik/prod/traefik.yml
-
 volumes:
-  certificates:
   storage_private:
   storage_public:
   storage_sessions:
@@ -284,4 +197,7 @@ volumes:
   tunnel_ssh_host_keys:
 
 networks:
+  default:
   web-public:
+    external: true
+    name: spin-production_web-public
