@@ -44,10 +44,50 @@ RUN echo "user = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-p
     echo "group = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf
 
 ############################################
+# Composer Stage (provides vendor for Vite build)
+############################################
+FROM composer:2 AS composer
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs
+
+COPY . .
+RUN composer dump-autoload --optimize
+
+############################################
+# Vite Build Stage
+############################################
+FROM node:20-alpine AS vite-build
+WORKDIR /app
+
+# Copy vendor from Composer stage (needed for flux.css and @source paths)
+COPY --from=composer /app/vendor ./vendor
+
+# Copy package files and install dependencies
+COPY package.json yarn.lock ./
+RUN yarn install
+
+# Copy source files needed for build
+COPY vite.config.js ./
+COPY resources ./resources
+COPY public ./public
+
+# Build Vite assets (outputs to public/build/)
+RUN yarn build
+
+############################################
 # Production Image
 ############################################
 FROM base AS deploy
 COPY --chown=www-data:www-data . /var/www/html
+
+# Copy built Vite assets from build stage
+COPY --from=vite-build --chown=www-data:www-data /app/public/build /var/www/html/public/build
+
+# Override .env with production config so app uses credentials from .env.production.
+# Spin deploy loads .env.production before build; ensure it exists in project root.
+COPY --chown=www-data:www-data .env.production /var/www/html/.env
 
 # Never ship Vite's dev-server indicator file to production.
 # If present, Laravel will try to load assets from the Vite dev server
